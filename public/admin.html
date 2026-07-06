@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin | EpicVolt</title>
+    <meta name="description" content="Admin panel for products, pricing, delivery, and order email settings.">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="admin-header">
+      <div>
+        <h1 data-i18n="adminTitle">Admin</h1>
+        <span class="summary-label">EpicVolt</span>
+      </div>
+      <div class="shop-actions">
+        <div class="language-switch" aria-label="Admin language">
+          <button class="button ghost" id="languageEnglish" type="button">EN</button>
+          <button class="button ghost" id="languagePersian" type="button">FA</button>
+        </div>
+        <a class="button ghost" href="/" data-i18n="storefront">Storefront</a>
+        <button class="button ghost" id="logoutButton" type="button" hidden data-i18n="logout">Logout</button>
+      </div>
+    </header>
+
+    <main class="admin-shell">
+      <section class="admin-login" id="loginCard">
+        <h2 data-i18n="ownerAccess">Owner access</h2>
+        <form id="loginForm">
+          <label>
+            <span data-i18n="adminPasscode">Admin passcode</span>
+            <input name="passcode" type="password" autocomplete="current-password" required>
+          </label>
+          <button class="button dark" type="submit" data-i18n="enterAdmin">Enter admin</button>
+          <p class="status-text" id="loginStatus" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section id="adminApp" hidden>
+        <div class="admin-layout">
+          <div class="admin-tabs" role="tablist" aria-label="Admin sections">
+            <button class="button active" id="addProductTab" type="button" data-i18n="addProductTab">Add product</button>
+            <button class="button" id="productsListTab" type="button" data-i18n="productsListTab">Products</button>
+            <button class="button" id="articlesTab" type="button" data-i18n="articlesTab">Articles</button>
+            <button class="button" id="mediaTab" type="button" data-i18n="mediaTab">Media</button>
+            <button class="button" id="ordersTab" type="button" data-i18n="ordersTab">Orders</button>
+            <button class="button" id="settingsTab" type="button" data-i18n="settingsTab">Settings</button>
+          </div>
+
+          <form class="admin-panel admin-view product-form" id="productForm" data-admin-view="add">
+            <div class="panel-title-row">
+              <div>
+                <p class="eyebrow" data-i18n="productManager">Product manager</p>
+                <h2 id="productFormTitle" data-i18n="addProduct">Add product</h2>
+              </div>
+              <button class="button ghost" id="resetProductForm" type="button" data-i18n="newProduct">New product</button>
+            </div>
+            <input type="hidden" name="id">
+
+            <section class="admin-form-section">
+              <h3 data-i18n="basicInfo">Basic info</h3>
+              <div class="form-grid">
+                <label>
+                  <span data-i18n="type">Type</span>
+                  <div class="combo-field" data-combo="type">
+                    <select id="typeChoice" data-combo-select="type"></select>
+                    <input name="type" data-combo-input="type" data-i18n-placeholder="typePlaceholder" placeholder="Battery, Tire, Accessory">
+                  </div>
+                </label>
+                <label>
+                  <span data-i18n="category">Category</span>
+                  <div class="combo-field" data-combo="category">
+                    <select id="categoryChoice" data-combo-select="category"></select>
+                    <input name="category" data-combo-input="category" data-i18n-placeholder="categoryPlaceholder" placeholder="Car Batteries">
+                  </div>
+                </label>
+                <label>
+                  <span data-i18n="brand">Brand</span>
+                  <div class="combo-field" data-combo="brand">
+                    <select id="brandChoice" data-combo-select="brand"></select>
+                    <input name="brand" data-combo-input="brand" data-i18n-placeholder="brandPlaceholder" placeholder="ACDelco">
+                  </div>
+                </label>
+                <label>
+                  <span data-i18n="productModel">Product model</span>
+                  <div class="combo-field" data-combo="model">
+                    <select id="modelChoice" data-combo-select="model"></select>
+                    <input name="model" data-combo-input="model" data-i18n-placeholder="modelPlaceholder" placeholder="Gold 48AGM">
+                  </div>
+                </label>
+                <label>
+                  <span data-i18n="partNumber">Part number</span>
+                  <input name="partNumber" data-i18n-placeholder="partNumberPlaceholder" placeholder="48AGM">
+                </label>
+                <label>
+                  <span data-i18n="active">Active</span>
+                  <span class="toggle-row">
+                    <input name="active" type="checkbox" checked>
+                    <span data-i18n="visibleInStore">Visible in store</span>
+                  </span>
+                </label>
+              </div>
+            </section>
+
+            <section class="admin-form-section">
+              <h3 data-i18n="pricingService">Pricing and service</h3>
+              <div class="form-grid">
+                <label>
+                  <span data-i18n="productPrice">Product price</span>
+                  <input name="price" type="number" min="0" step="0.01" required>
+                </label>
+                <label>
+                  <span data-i18n="installFee">Install fee</span>
+                  <input name="installFee" type="number" min="0" step="0.01" required>
+                </label>
+                <label>
+                  <span data-i18n="ratingLabel">Star rating (0-5)</span>
+                  <input name="rating" type="number" min="0" max="5" step="0.5" value="0">
+                </label>
+                <label>
+                  <span data-i18n="featuredLabel">Pin to homepage</span>
+                  <span class="toggle-row">
+                    <input name="featured" type="checkbox">
+                    <span data-i18n="featuredHint">Show first on the storefront</span>
+                  </span>
+                </label>
+                <label class="full">
+                  <span data-i18n="freeInstall">Free install</span>
+                  <span class="toggle-row">
+                    <input name="installFree" type="checkbox">
+                    <span data-i18n="showStruckInstall">Show the regular install fee crossed out on the storefront</span>
+                  </span>
+                </label>
+              </div>
+            </section>
+
+            <section class="admin-form-section">
+              <h3 data-i18n="mediaDescription">Media and description</h3>
+              <div class="form-grid">
+                <label>
+                  <span data-i18n="imageUrl">Image URL</span>
+                  <input name="image" data-i18n-placeholder="imageUrlPlaceholder" placeholder="/assets/sample-battery.png">
+                </label>
+                <label>
+                  <span data-i18n="previousImages">Previous images</span>
+                  <select id="productMediaChoice"></select>
+                </label>
+                <div class="media-picker full" id="productMediaThumbs"></div>
+                <label>
+                  <span data-i18n="imageSeoName">Image SEO name</span>
+                  <input name="seoName" placeholder="calgary battery replacement">
+                </label>
+                <label>
+                  <span data-i18n="uploadImage">Upload image</span>
+                  <input name="imageFile" type="file" accept="image/*">
+                </label>
+                <label class="full">
+                  <span data-i18n="description">Description</span>
+                  <textarea name="description" required></textarea>
+                </label>
+                <label class="full">
+                  <span data-i18n="features">Features</span>
+                  <textarea name="features" data-i18n-placeholder="featuresPlaceholder" placeholder="One feature per line"></textarea>
+                </label>
+              </div>
+            </section>
+
+            <section class="admin-form-section full">
+              <h3 data-i18n="vehicleFitments">Vehicle fitments</h3>
+              <p class="field-help" data-i18n="fitmentHelp">Pick existing makes/models or add new ones, then attach them to this product.</p>
+              <div class="fitment-builder">
+                <div class="combo-field" data-fitment-combo="make">
+                  <select id="fitmentMakeChoice"></select>
+                  <input id="fitmentMakeInput" data-i18n-placeholder="newMakePlaceholder" placeholder="New make">
+                </div>
+                <div class="combo-field" data-fitment-combo="model">
+                  <select id="fitmentModelChoice"></select>
+                  <input id="fitmentModelInput" data-i18n-placeholder="newModelPlaceholder" placeholder="New model">
+                </div>
+                <button class="button ghost" id="addFitmentButton" type="button" data-i18n="addFitment">Add fitment</button>
+              </div>
+              <div class="fitment-chips" id="fitmentChips"></div>
+              <textarea name="fitments" hidden></textarea>
+            </section>
+
+            <div class="form-actions">
+              <button class="button dark" type="submit" data-i18n="saveProduct">Save product</button>
+              <p class="status-text" id="productStatus" aria-live="polite"></p>
+            </div>
+          </form>
+
+          <section class="admin-card admin-view" id="productsPanel" data-admin-view="products" hidden>
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow" data-i18n="catalog">Catalog</p>
+                <h2 data-i18n="products">Products</h2>
+              </div>
+              <button class="button dark" id="quickAddProduct" type="button" data-i18n="addProduct">Add product</button>
+            </div>
+            <label class="full">
+              <input id="productSearchInput" type="search" data-i18n-placeholder="searchProducts" placeholder="Search products...">
+            </label>
+            <div class="product-admin-list" id="productAdminList"></div>
+          </section>
+
+          <section class="admin-card admin-view" id="ordersPanel" data-admin-view="orders" hidden>
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow" data-i18n="inbox">Inbox</p>
+                <h2 data-i18n="orders">Orders</h2>
+              </div>
+            </div>
+            <div class="order-list" id="orderList"></div>
+          </section>
+
+          <section class="admin-panel admin-view" id="articlesPanel" data-admin-view="articles" hidden>
+            <form class="article-form" id="articleForm">
+              <div class="panel-title-row">
+                <div>
+                  <p class="eyebrow" data-i18n="seoContent">SEO content</p>
+                  <h2 id="articleFormTitle" data-i18n="writeArticle">Write article</h2>
+                </div>
+                <button class="button ghost" id="resetArticleForm" type="button" data-i18n="newArticle">New article</button>
+              </div>
+              <input type="hidden" name="id">
+              <div class="form-grid">
+                <label>
+                  <span data-i18n="title">Title</span>
+                  <input name="title" required>
+                </label>
+                <label>
+                  <span data-i18n="urlSlug">URL slug</span>
+                  <input name="slug" placeholder="dead-car-battery-calgary">
+                </label>
+                <label class="full">
+                  <span data-i18n="summary">Summary</span>
+                  <textarea name="summary" required></textarea>
+                </label>
+                <label class="full">
+                  <span data-i18n="articleContent">Article content</span>
+                  <textarea name="content" required></textarea>
+                </label>
+                <label>
+                  <span data-i18n="imageUrl">Image URL</span>
+                  <input name="image" placeholder="/assets/sample-battery.png">
+                </label>
+                <label>
+                  <span data-i18n="previousImages">Previous images</span>
+                  <select id="articleMediaChoice"></select>
+                </label>
+                <div class="media-picker full" id="articleMediaThumbs"></div>
+                <label>
+                  <span data-i18n="imageSeoName">Image SEO name</span>
+                  <input name="seoName" placeholder="calgary emergency battery service">
+                </label>
+                <label>
+                  <span data-i18n="uploadImage">Upload image</span>
+                  <input name="imageFile" type="file" accept="image/*">
+                </label>
+                <label>
+                  <span data-i18n="imageAltText">Image alt text</span>
+                  <input name="imageAlt">
+                </label>
+                <label>
+                  <span data-i18n="seoTitle">SEO title</span>
+                  <input name="seoTitle">
+                </label>
+                <label class="full">
+                  <span data-i18n="metaDescription">Meta description</span>
+                  <textarea name="metaDescription"></textarea>
+                </label>
+                <label class="full">
+                  <span data-i18n="keywords">Keywords</span>
+                  <textarea name="keywords" placeholder="one keyword per line"></textarea>
+                </label>
+                <label>
+                  <span data-i18n="active">Active</span>
+                  <span class="toggle-row">
+                    <input name="active" type="checkbox" checked>
+                    <span data-i18n="showOnSite">Show on site</span>
+                  </span>
+                </label>
+                <label>
+                  <span data-i18n="featuredLabel">Pin to homepage</span>
+                  <span class="toggle-row">
+                    <input name="featured" type="checkbox">
+                    <span data-i18n="featuredHint">Show first on the storefront</span>
+                  </span>
+                </label>
+              </div>
+              <button class="button dark" type="submit" data-i18n="saveArticle">Save article</button>
+              <p class="status-text" id="articleStatus" aria-live="polite"></p>
+            </form>
+            <div class="admin-list-spacer"></div>
+            <div class="product-admin-list" id="articleAdminList"></div>
+          </section>
+
+          <section class="admin-card admin-view" id="mediaPanel" data-admin-view="media" hidden>
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow" data-i18n="imageBank">Image bank</p>
+                <h2 data-i18n="mediaLibrary">Media library</h2>
+              </div>
+            </div>
+            <form class="media-upload-form" id="mediaForm">
+              <div class="form-grid">
+                <label>
+                  <span data-i18n="imageSeoName">Image SEO name</span>
+                  <input name="seoName" placeholder="calgary mobile tire installation" required>
+                </label>
+                <label>
+                  <span data-i18n="imageAltText">Alt text</span>
+                  <input name="altText" placeholder="Mobile tire installation in Calgary">
+                </label>
+                <label class="full">
+                  <span data-i18n="uploadImage">Upload image</span>
+                  <input name="imageFile" type="file" accept="image/*" required>
+                </label>
+              </div>
+              <button class="button dark" type="submit" data-i18n="uploadCompressedImage">Upload compressed image</button>
+              <p class="status-text" id="mediaStatus" aria-live="polite"></p>
+            </form>
+            <div class="media-grid" id="mediaGrid"></div>
+          </section>
+
+          <section class="admin-panel admin-view" id="settingsPanel" data-admin-view="settings" hidden>
+            <form class="settings-form" id="settingsForm">
+              <div class="panel-title-row">
+                <div>
+                  <p class="eyebrow" data-i18n="configuration">Configuration</p>
+                  <h2 data-i18n="storeSettings">Store settings</h2>
+                </div>
+              </div>
+              <div class="form-grid">
+                <label>
+                  <span data-i18n="storeName">Store name</span>
+                  <input name="storeName" required>
+                </label>
+                <label>
+                  <span data-i18n="currency">Currency</span>
+                  <input name="currency" required>
+                </label>
+                <label class="full">
+                  <span data-i18n="tagline">Tagline</span>
+                  <input name="tagline" required>
+                </label>
+                <label>
+                  <span data-i18n="ownerEmail">Owner email</span>
+                  <input name="ownerEmail" type="email">
+                </label>
+                <label>
+                  <span data-i18n="fromEmail">From email</span>
+                  <input name="fromEmail" type="email">
+                </label>
+                <label>
+                  Footer phone
+                  <input name="phone">
+                </label>
+                <label>
+                  Footer public email
+                  <input name="publicEmail" type="email">
+                </label>
+                <label>
+                  Footer location
+                  <input name="serviceLocation">
+                </label>
+                <label>
+                  Business hours
+                  <input name="businessHours">
+                </label>
+                <label class="full">
+                  Footer note
+                  <textarea name="footerNote"></textarea>
+                </label>
+                <label>
+                  <span data-i18n="deliveryFee">Delivery fee</span>
+                  <input name="deliveryFee" type="number" min="0" step="0.01">
+                </label>
+                <label>
+                  <span data-i18n="adminPasscode">Admin passcode</span>
+                  <input name="adminPasscode" type="text" data-i18n-placeholder="passcodePlaceholder" placeholder="Leave blank to keep current passcode">
+                </label>
+                <label>
+                  <span data-i18n="smtpHost">SMTP host</span>
+                  <input name="smtpHost" placeholder="smtp.example.com">
+                </label>
+                <label>
+                  <span data-i18n="smtpPort">SMTP port</span>
+                  <input name="smtpPort" type="number" min="1" placeholder="587">
+                </label>
+                <label>
+                  <span data-i18n="smtpUser">SMTP user</span>
+                  <input name="smtpUser">
+                </label>
+                <label>
+                  <span data-i18n="smtpPassword">SMTP password</span>
+                  <input name="smtpPass" type="password" data-i18n-placeholder="smtpPasswordPlaceholder" placeholder="Leave blank to keep saved password">
+                </label>
+                <label>
+                  <span data-i18n="smtpSecure">SMTP secure</span>
+                  <span class="toggle-row">
+                    <input name="smtpSecure" type="checkbox">
+                    <span data-i18n="useSslTls">Use SSL/TLS</span>
+                  </span>
+                </label>
+              </div>
+
+              <h3 data-i18n="sliderSettings">Homepage slider</h3>
+              <div class="form-grid">
+                <label>
+                  <span data-i18n="sliderProduct">Slider product</span>
+                  <select name="sliderProductId" id="sliderProductChoice"></select>
+                </label>
+                <label>
+                  <span data-i18n="sliderArticle">Slider article</span>
+                  <select name="sliderArticleId" id="sliderArticleChoice"></select>
+                </label>
+                <p class="field-help full" data-i18n="sliderHelp">Pick one product and/or one article to feature in the slider at the top of the homepage. Choose "None" to hide a slide.</p>
+              </div>
+
+              <h3 data-i18n="notificationSettings">Order notifications</h3>
+              <div class="form-grid">
+                <label>
+                  <span data-i18n="notificationChannel">Notify owner via</span>
+                  <select name="notificationChannel">
+                    <option value="email" data-i18n="channelEmailOnly">Email only</option>
+                    <option value="telegram" data-i18n="channelTelegramOnly">Telegram only</option>
+                    <option value="both" data-i18n="channelBoth">Email and Telegram</option>
+                  </select>
+                </label>
+                <label>
+                  <span data-i18n="telegramBotToken">Telegram bot token</span>
+                  <input name="telegramBotToken" data-i18n-placeholder="telegramBotTokenPlaceholder" placeholder="Leave blank to keep saved token">
+                </label>
+                <label>
+                  <span data-i18n="telegramChatId">Telegram chat IDs</span>
+                  <input name="telegramChatId" placeholder="123456789, 987654321">
+                </label>
+                <p class="field-help full" data-i18n="telegramHelp">Create a bot with @BotFather. Each person must send /start to the bot, then find their chat ID via getUpdates (or @userinfobot). Separate multiple chat IDs with commas.</p>
+              </div>
+              <button class="button dark" type="submit" data-i18n="saveSettings">Save settings</button>
+              <p class="status-text" id="settingsStatus" aria-live="polite"></p>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="/admin.js"></script>
+  </body>
+</html>

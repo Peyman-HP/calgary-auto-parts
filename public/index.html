@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EpicVolt</title>
+    <meta name="description" content="Mobile car batteries, tires, and auto parts delivered and installed across Calgary. Pay after service at your door.">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="EpicVolt home">
+        <span class="brand-mark"><img src="/assets/epicvoltlogo.png" alt=""></span>
+        <span>
+          <strong class="wordmark">EpicVolt</strong>
+          <small>Car batteries & more</small>
+        </span>
+      </a>
+      <nav class="category-nav" id="categoryNav" aria-label="Product categories"></nav>
+      <div class="search-box">
+        <label class="search-wrap" aria-label="Search products">
+          <span>Search</span>
+          <input id="searchInput" type="search" placeholder="Battery, tire, brand, model" autocomplete="off">
+        </label>
+        <div class="search-suggestions" id="searchSuggestions" hidden></div>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="heroTitle">
+        <img class="hero-image" src="/assets/hero-service.png" alt="Mobile automotive service van with tire and battery tools in a Calgary driveway">
+        <div class="hero-shade"></div>
+        <div class="hero-inner">
+          <div class="hero-copy">
+            <img class="hero-logo" src="/assets/epicvoltlogo.png" alt="EpicVolt logo">
+            <p class="eyebrow">Calgary mobile parts service</p>
+            <h1 class="wordmark hero-wordmark" id="heroTitle">EpicVolt</h1>
+            <p class="hero-lede">Car batteries, tires, and essential auto parts delivered and installed at your home, office, or roadside address.</p>
+            <div class="hero-proof">
+              <span>No online payment</span>
+              <span>Pay after service</span>
+              <span>Installation optional</span>
+            </div>
+            <a class="primary-link" href="#shop">Find parts</a>
+          </div>
+
+          <form class="finder-panel" id="finderForm">
+            <div class="panel-heading">
+              <p>Fitment finder</p>
+              <strong>Choose your vehicle</strong>
+            </div>
+            <label>
+              Product
+              <select id="typeFilter"></select>
+            </label>
+            <label>
+              Vehicle make
+              <select id="makeFilter"></select>
+            </label>
+            <label>
+              Vehicle model
+              <select id="modelFilter"></select>
+            </label>
+            <button class="button dark" type="submit">Show options</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="feature-slider" id="featureSlider" aria-label="Featured highlights" hidden>
+        <div class="slider-track" id="sliderTrack"></div>
+        <div class="slider-dots" id="sliderDots"></div>
+      </section>
+
+      <section class="promise-strip" aria-label="Service promise">
+        <div>
+          <span>Pay at your door</span>
+          <strong>Nothing is charged on the website.</strong>
+        </div>
+        <div>
+          <span>Free install offers</span>
+          <strong>Regular install prices are shown with a strike-through when waived.</strong>
+        </div>
+        <div>
+          <span>Installation choice</span>
+          <strong>Choose installation or product-only service before submitting the order.</strong>
+        </div>
+      </section>
+
+      <section class="shop-section" id="shop" aria-labelledby="shopTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Live catalog</p>
+            <h2 id="shopTitle">Batteries, tires, and more</h2>
+          </div>
+          <div class="shop-actions">
+            <button class="button ghost" id="clearFilters" type="button">Clear filters</button>
+            <a class="button ghost" href="/admin.html">Admin</a>
+          </div>
+        </div>
+
+        <div class="active-filters" id="activeFilters" aria-live="polite"></div>
+        <div class="product-grid" id="productGrid" aria-live="polite"></div>
+      </section>
+
+      <section class="articles-section" aria-labelledby="articlesTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Guides</p>
+            <h2 id="articlesTitle">Urgent auto help articles</h2>
+          </div>
+          <a class="button ghost" href="/articles.html">View all articles</a>
+        </div>
+        <div class="article-grid" id="articleGrid"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <strong class="wordmark" id="footerStoreName">EpicVolt</strong>
+        <p id="footerNote">Fast mobile help for batteries, tires, and urgent vehicle issues across Calgary.</p>
+      </div>
+      <address>
+        <span id="footerPhone"></span>
+        <span id="footerEmail"></span>
+        <span id="footerLocation"></span>
+        <span id="footerHours"></span>
+      </address>
+    </footer>
+
+    <dialog class="order-dialog" id="orderDialog">
+      <form method="dialog" class="dialog-close-wrap">
+        <button class="icon-button" aria-label="Close order form">x</button>
+      </form>
+      <div id="orderDialogBody"></div>
+    </dialog>
+
+    <template id="productTemplate">
+      <article class="product-card">
+        <div class="product-media">
+          <img alt="">
+        </div>
+        <div class="product-body">
+          <div class="product-meta">
+            <span class="chip"></span>
+            <span class="part"></span>
+          </div>
+          <h3></h3>
+          <p class="description"></p>
+          <ul class="feature-list"></ul>
+          <div class="price-row">
+            <div>
+              <span class="price"></span>
+              <small class="install-line"></small>
+            </div>
+            <button class="button order-button" type="button">Order</button>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <template id="articleTemplate">
+      <a class="article-card" href="">
+        <img alt="">
+        <div>
+          <span class="summary-label"></span>
+          <h3></h3>
+          <p></p>
+        </div>
+      </a>
+    </template>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

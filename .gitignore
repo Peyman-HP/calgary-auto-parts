@@ -1,0 +1,11 @@
+node_modules/
+.env
+
+# Live data stays on the server, never in git (the repo ships data/db.sample.json instead)
+data/db.json
+data/outbox/
+data/backups/
+
+# Uploaded images are runtime data
+public/uploads/
+public/media/

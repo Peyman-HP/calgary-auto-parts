@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: calgary-auto-parts
+    runtime: node
+    plan: starter
+    buildCommand: npm ci
+    startCommand: node server.js
+    healthCheckPath: /api/catalog
+    disk:
+      name: store-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

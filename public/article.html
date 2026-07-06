@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Article | EpicVolt</title>
+    <meta name="description" content="Auto parts and emergency service article.">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header article-header">
+      <a class="brand" href="/">
+        <span class="brand-mark"><img src="/assets/epicvoltlogo.png" alt=""></span>
+        <span>
+          <strong class="wordmark" id="articleStoreName">EpicVolt</strong>
+          <small>Batteries, tires, urgent mobile help</small>
+        </span>
+      </a>
+      <nav class="category-nav" aria-label="Article navigation">
+        <a class="button ghost" href="/#shop">Shop</a>
+        <a class="button ghost" href="/#articlesTitle">Articles</a>
+      </nav>
+      <a class="button dark" href="/#shop">Request service</a>
+    </header>
+
+    <main class="article-page" id="articlePage" aria-live="polite">
+      <div class="empty-state">Loading article...</div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <strong class="wordmark" id="footerStoreName">EpicVolt</strong>
+        <p id="footerNote"></p>
+      </div>
+      <address>
+        <span id="footerPhone"></span>
+        <span id="footerEmail"></span>
+        <span id="footerLocation"></span>
+        <span id="footerHours"></span>
+      </address>
+    </footer>
+
+    <script src="/article.js"></script>
+  </body>
+</html>

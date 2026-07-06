@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Articles | EpicVolt</title>
+    <meta name="description" content="Guides and articles about car batteries, tires, and urgent mobile auto service in Calgary.">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header article-header">
+      <a class="brand" href="/">
+        <span class="brand-mark"><img src="/assets/epicvoltlogo.png" alt=""></span>
+        <span>
+          <strong class="wordmark" id="articleStoreName">EpicVolt</strong>
+          <small>Batteries, tires, urgent mobile help</small>
+        </span>
+      </a>
+      <nav class="category-nav" aria-label="Article navigation">
+        <a class="button ghost" href="/#shop">Shop</a>
+      </nav>
+      <a class="button dark" href="/#shop">Request service</a>
+    </header>
+
+    <main class="shop-section" id="articlesPage">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Guides</p>
+          <h2>All articles</h2>
+        </div>
+      </div>
+      <div class="article-grid" id="articleGrid">
+        <div class="empty-state">Loading articles...</div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <strong class="wordmark" id="footerStoreName">EpicVolt</strong>
+        <p id="footerNote"></p>
+      </div>
+      <address>
+        <span id="footerPhone"></span>
+        <span id="footerEmail"></span>
+        <span id="footerLocation"></span>
+        <span id="footerHours"></span>
+      </address>
+    </footer>
+
+    <script>
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      async function initArticlesPage() {
+        const grid = document.querySelector("#articleGrid");
+        try {
+          const response = await fetch("/api/catalog");
+          const data = await response.json();
+          const settings = data.settings || {};
+          const articles = (data.articles || []).slice().sort((a, b) => {
+            const featuredSort = (b.featured === true) - (a.featured === true);
+            if (featuredSort) return featuredSort;
+            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+          });
+
+          document.title = `Articles | ${settings.storeName || "EpicVolt"}`;
+          document.querySelector("#articleStoreName").textContent = settings.storeName || "EpicVolt";
+          document.querySelector("#footerStoreName").textContent = settings.storeName || "EpicVolt";
+          document.querySelector("#footerNote").textContent = settings.footerNote || settings.tagline || "";
+          document.querySelector("#footerPhone").textContent = settings.phone ? `Phone: ${settings.phone}` : "";
+          document.querySelector("#footerEmail").textContent = settings.publicEmail ? `Email: ${settings.publicEmail}` : "";
+          document.querySelector("#footerLocation").textContent = settings.serviceLocation ? `Location: ${settings.serviceLocation}` : "";
+          document.querySelector("#footerHours").textContent = settings.businessHours ? `Hours: ${settings.businessHours}` : "";
+
+          if (!articles.length) {
+            grid.innerHTML = '<div class="empty-state">No articles published yet.</div>';
+            return;
+          }
+
+          grid.innerHTML = articles
+            .map((article) => `
+              <a class="article-card" href="/article.html?slug=${encodeURIComponent(article.slug)}">
+                <img src="${escapeHtml(article.image || "/assets/hero-service.png")}" alt="${escapeHtml(article.imageAlt || article.title)}">
+                <div>
+                  <span class="summary-label">Emergency guide</span>
+                  <h3>${escapeHtml(article.title)}</h3>
+                  <p>${escapeHtml(article.summary)}</p>
+                </div>
+              </a>
+            `)
+            .join("");
+        } catch (error) {
+          grid.innerHTML = `<div class="empty-state">Articles could not load. ${escapeHtml(error.message)}</div>`;
+        }
+      }
+
+      initArticlesPage();
+    </script>
+  </body>
+</html>

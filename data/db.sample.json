@@ -1,0 +1,305 @@
+{
+  "settings": {
+    "storeName": "EpicVolt",
+    "tagline": "Power that starts everything. Car batteries, tires, and mobile installation across Calgary.",
+    "ownerEmail": "owner@example.com",
+    "fromEmail": "orders@calgaryroadready.ca",
+    "phone": "(403) 555-0198",
+    "publicEmail": "service@calgaryroadready.ca",
+    "serviceLocation": "Calgary, Alberta",
+    "businessHours": "Daily emergency support by request",
+    "footerNote": "EpicVolt brings fast mobile help for batteries, tires, and urgent vehicle issues across Calgary.",
+    "deliveryFee": 25,
+    "currency": "CAD",
+    "adminPasscode": "2468",
+    "smtp": {
+      "host": "",
+      "port": 587,
+      "secure": false,
+      "user": "",
+      "pass": ""
+    },
+    "notifications": {
+      "channel": "email",
+      "telegram": {
+        "botToken": "",
+        "chatId": ""
+      }
+    },
+    "slider": {
+      "productId": "battery-48agm",
+      "articleId": "article-winter-tires"
+    }
+  },
+  "products": [
+    {
+      "id": "battery-48agm",
+      "active": true,
+      "type": "Battery",
+      "category": "Car Batteries",
+      "brand": "ACDelco",
+      "model": "Gold 48AGM",
+      "partNumber": "48AGM",
+      "price": 319,
+      "installFee": 45,
+      "installFree": true,
+      "rating": 3.5,
+      "featured": true,
+      "image": "/assets/sample-battery.png",
+      "description": "Premium AGM replacement battery for modern sedans, SUVs, and trucks that need high reserve capacity.",
+      "features": [
+        "AGM construction",
+        "760 cold cranking amps",
+        "36-month replacement support",
+        "Mobile install eligible"
+      ],
+      "fitments": [
+        {
+          "make": "Toyota",
+          "model": "Camry"
+        },
+        {
+          "make": "Honda",
+          "model": "Accord"
+        },
+        {
+          "make": "Ford",
+          "model": "F-150"
+        }
+      ],
+      "createdAt": "2026-06-01T12:00:00.000Z",
+      "updatedAt": "2026-07-06T10:26:52.333Z"
+    },
+    {
+      "id": "battery-h6-agm",
+      "active": true,
+      "type": "Battery",
+      "category": "Car Batteries",
+      "brand": "Interstate",
+      "model": "H6 AGM",
+      "partNumber": "H6-AGM",
+      "price": 289,
+      "installFee": 45,
+      "installFree": true,
+      "rating": 4.5,
+      "featured": true,
+      "image": "/assets/sample-battery.png",
+      "description": "Reliable H6 AGM battery for daily drivers that need dependable cold-weather starting in Calgary.",
+      "features": [
+        "730 cold cranking amps",
+        "Maintenance free",
+        "Good for cold starts",
+        "Old battery removal included"
+      ],
+      "fitments": [
+        {
+          "make": "Volkswagen",
+          "model": "Jetta"
+        },
+        {
+          "make": "BMW",
+          "model": "3 Series"
+        },
+        {
+          "make": "Hyundai",
+          "model": "Santa Fe"
+        }
+      ],
+      "createdAt": "2026-06-02T12:00:00.000Z",
+      "updatedAt": "2026-07-06T10:16:34.682Z"
+    },
+    {
+      "id": "tire-allseason-20555r16",
+      "active": true,
+      "type": "Tire",
+      "category": "All-Season Tires",
+      "brand": "Michelin",
+      "model": "Defender 2",
+      "partNumber": "205/55R16",
+      "price": 178,
+      "installFee": 30,
+      "installFree": false,
+      "image": "/assets/sample-tire.png",
+      "description": "Quiet all-season tire with long tread life for compact cars and daily commuting.",
+      "features": [
+        "205/55R16",
+        "All-season tread",
+        "Long-life compound",
+        "Balancing available"
+      ],
+      "fitments": [
+        {
+          "make": "Toyota",
+          "model": "Corolla"
+        },
+        {
+          "make": "Honda",
+          "model": "Civic"
+        },
+        {
+          "make": "Mazda",
+          "model": "3"
+        }
+      ],
+      "createdAt": "2026-06-03T12:00:00.000Z",
+      "rating": 0,
+      "featured": false
+    },
+    {
+      "id": "tire-winter-22565r17",
+      "active": true,
+      "type": "Tire",
+      "category": "Winter Tires",
+      "brand": "Bridgestone",
+      "model": "Blizzak DM-V2",
+      "partNumber": "225/65R17",
+      "price": 214,
+      "installFee": 30,
+      "installFree": false,
+      "image": "/assets/sample-tire.png",
+      "description": "Winter tire built for SUVs and crossovers needing confident traction in snow and ice.",
+      "features": [
+        "225/65R17",
+        "Winter compound",
+        "SUV and crossover fit",
+        "Studless ice traction"
+      ],
+      "fitments": [
+        {
+          "make": "Toyota",
+          "model": "RAV4"
+        },
+        {
+          "make": "Honda",
+          "model": "CR-V"
+        },
+        {
+          "make": "Hyundai",
+          "model": "Tucson"
+        }
+      ],
+      "createdAt": "2026-06-04T12:00:00.000Z",
+      "rating": 0,
+      "featured": false
+    },
+    {
+      "id": "wiper-premium-22",
+      "active": true,
+      "type": "Accessory",
+      "category": "Wipers",
+      "brand": "Bosch",
+      "model": "Icon 22A",
+      "partNumber": "22A",
+      "price": 34,
+      "installFee": 10,
+      "installFree": true,
+      "image": "/assets/hero-service.png",
+      "description": "Premium beam wiper blade add-on for customers booking mobile service.",
+      "features": [
+        "22-inch blade",
+        "All-weather wipe",
+        "Quick add-on install"
+      ],
+      "fitments": [
+        {
+          "make": "Honda",
+          "model": "Civic"
+        },
+        {
+          "make": "Toyota",
+          "model": "Camry"
+        }
+      ],
+      "createdAt": "2026-06-05T12:00:00.000Z",
+      "rating": 0,
+      "featured": false
+    }
+  ],
+  "orders": [],
+  "media": [
+    {
+      "id": "media-hero-service",
+      "url": "/assets/hero-service.png",
+      "filename": "hero-service.png",
+      "originalName": "hero-service.png",
+      "seoName": "calgary mobile battery and tire service",
+      "altText": "Mobile battery and tire service in Calgary",
+      "mimeType": "image/png",
+      "originalBytes": null,
+      "bytes": null,
+      "width": null,
+      "height": null,
+      "createdAt": "2026-07-03T00:00:00.000Z"
+    },
+    {
+      "id": "media-sample-battery",
+      "url": "/assets/sample-battery.png",
+      "filename": "sample-battery.png",
+      "originalName": "sample-battery.png",
+      "seoName": "car battery replacement Calgary",
+      "altText": "Car battery replacement product",
+      "mimeType": "image/png",
+      "originalBytes": null,
+      "bytes": null,
+      "width": null,
+      "height": null,
+      "createdAt": "2026-07-03T00:00:00.000Z"
+    },
+    {
+      "id": "media-sample-tire",
+      "url": "/assets/sample-tire.png",
+      "filename": "sample-tire.png",
+      "originalName": "sample-tire.png",
+      "seoName": "winter tire Calgary mobile install",
+      "altText": "Automotive tire product",
+      "mimeType": "image/png",
+      "originalBytes": null,
+      "bytes": null,
+      "width": null,
+      "height": null,
+      "createdAt": "2026-07-03T00:00:00.000Z"
+    }
+  ],
+  "articles": [
+    {
+      "id": "article-emergency-battery",
+      "active": true,
+      "featured": true,
+      "title": "What to do when your car battery dies in Calgary",
+      "slug": "dead-car-battery-calgary",
+      "summary": "Fast steps for a dead battery, when to replace it, and how mobile service can help in urgent situations.",
+      "content": "If your vehicle will not start, check lights and accessories first, keep the vehicle in a safe place, and avoid repeated cranking. Calgary cold weather can expose a weak battery quickly. A mobile battery service can test, deliver, and install the correct replacement at your address.",
+      "image": "/assets/sample-battery.png",
+      "imageAlt": "Car battery replacement for emergency Calgary service",
+      "seoTitle": "Dead Car Battery Calgary | Mobile Battery Replacement",
+      "metaDescription": "Need urgent battery help in Calgary? Learn what to check first and when mobile battery replacement is the fastest option.",
+      "keywords": [
+        "dead car battery Calgary",
+        "mobile battery replacement",
+        "emergency battery service"
+      ],
+      "updatedAt": "2026-07-06T10:16:34.754Z",
+      "createdAt": "2026-07-03T00:00:00.000Z"
+    },
+    {
+      "id": "article-winter-tires",
+      "active": true,
+      "title": "When Calgary drivers should switch to winter tires",
+      "slug": "calgary-winter-tire-change",
+      "summary": "A practical guide for winter tire timing, safety, and quick mobile installation.",
+      "content": "Winter tires are most useful once temperatures stay near 7 C or below. In Calgary, changing early helps avoid rush periods and improves control during sudden snow or ice. Mobile tire service is useful when you need fast help at home or work.",
+      "image": "/assets/sample-tire.png",
+      "imageAlt": "Winter tire for Calgary drivers",
+      "seoTitle": "Calgary Winter Tire Change | Mobile Tire Service",
+      "metaDescription": "Learn when to switch to winter tires in Calgary and how quick mobile tire service helps in urgent conditions.",
+      "keywords": [
+        "Calgary winter tires",
+        "mobile tire install",
+        "winter tire change"
+      ],
+      "createdAt": "2026-07-03T00:00:00.000Z",
+      "updatedAt": "2026-07-03T00:00:00.000Z",
+      "featured": false
+    }
+  ]
+}
