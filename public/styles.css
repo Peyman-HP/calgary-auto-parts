@@ -696,12 +696,11 @@ input[type="checkbox"] {
 }
 
 .article-card {
-  display: grid;
-  grid-template-rows: 180px 1fr;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--line);
-  background: var(--glass);
-  backdrop-filter: blur(18px);
+  background: #ffffff;
   box-shadow: 0 14px 34px rgba(5, 71, 52, 0.08);
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
@@ -713,10 +712,16 @@ input[type="checkbox"] {
 }
 
 .article-card img {
+  display: block;
   width: 100%;
-  height: 100%;
+  height: 180px;
+  flex: none;
   object-fit: cover;
   background: var(--soft);
+}
+
+.article-card > div {
+  background: #ffffff;
 }
 
 .article-card div {
@@ -793,7 +798,7 @@ input[type="checkbox"] {
 .article-detail-copy h1 {
   margin: 0;
   font-size: clamp(2.1rem, 4vw, 4.2rem);
-  line-height: 1;
+  line-height: 1.15;
 }
 
 .article-summary {
@@ -1424,7 +1429,8 @@ input[type="checkbox"] {
   }
 
   .article-detail-image {
-    min-height: 260px;
+    height: 260px;
+    min-height: 0;
   }
 
   .fitment-builder {
