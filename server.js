@@ -177,6 +177,7 @@ function publicSettings(settings) {
     businessHours: settings.businessHours || "",
     footerNote: settings.footerNote || "",
     deliveryFee: Number(settings.deliveryFee || 0),
+    coreBuyback: Number(settings.coreBuyback ?? 10),
     currency: settings.currency || "CAD",
     slider: {
       productId: settings.slider?.productId || "",
@@ -190,6 +191,7 @@ function ensureCollections(db) {
   db.orders ||= [];
   db.articles ||= [];
   db.media ||= [];
+  db.fitmentGuide ||= [];
   return db;
 }
 
@@ -205,6 +207,7 @@ function adminSettings(settings) {
     businessHours: settings.businessHours || "",
     footerNote: settings.footerNote || "",
     deliveryFee: Number(settings.deliveryFee || 0),
+    coreBuyback: Number(settings.coreBuyback ?? 10),
     currency: settings.currency || "CAD",
     smtp: {
       host: process.env.SMTP_HOST || settings.smtp?.host || "",
@@ -455,6 +458,8 @@ function productFromBody(body, fileMedia, existing = {}) {
   const category = String(body.category || existing.category || "Other Parts").trim();
   const generatedId = slugify([type, brand, model, body.partNumber]) + `-${crypto.randomBytes(3).toString("hex")}`;
 
+  const galleryText = body.gallery !== undefined ? body.gallery : JSON.stringify(existing.gallery || []);
+
   return {
     id: existing.id || body.id || generatedId,
     active: body.active === undefined ? existing.active !== false : boolField(body.active),
@@ -469,9 +474,41 @@ function productFromBody(body, fileMedia, existing = {}) {
     rating: Math.max(0, Math.min(5, numberField(body.rating, existing.rating || 0))),
     featured: body.featured === undefined ? Boolean(existing.featured) : boolField(body.featured),
     image: fileMedia?.url || String(body.image || existing.image || "/assets/hero-service.png").trim(),
+    gallery: parseArrayField(galleryText).map((url) => String(url).trim()).filter(Boolean),
     description: String(body.description || existing.description || "").trim(),
     features: parseArrayField(body.features || JSON.stringify(existing.features || [])),
     fitments: parseFitments(body.fitments || JSON.stringify(existing.fitments || [])),
+    // Used-battery specific fields (blank/0 for non-battery products)
+    battery: {
+      groupSize: String(body.groupSize ?? existing.battery?.groupSize ?? "").trim(),
+      batteryType: String(body.batteryType ?? existing.battery?.batteryType ?? "").trim(),
+      ratedCca: String(body.ratedCca ?? existing.battery?.ratedCca ?? "").trim(),
+      testedCca: String(body.testedCca ?? existing.battery?.testedCca ?? "").trim(),
+      voltage: String(body.voltage ?? existing.battery?.voltage ?? "").trim(),
+      dateCode: String(body.dateCode ?? existing.battery?.dateCode ?? "").trim(),
+      conditionGrade: String(body.conditionGrade ?? existing.battery?.conditionGrade ?? "").trim(),
+      warrantyDays: numberField(body.warrantyDays, existing.battery?.warrantyDays || 0),
+      stockQuantity: numberField(body.stockQuantity, existing.battery?.stockQuantity || 0),
+      terminalLayout: String(body.terminalLayout ?? existing.battery?.terminalLayout ?? "").trim()
+    },
+    coreExchangeDiscount: numberField(body.coreExchangeDiscount, existing.coreExchangeDiscount || 0),
+    createdAt: existing.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function fitmentGuideFromBody(body, existing = {}) {
+  const agm = String(body.agmRequired ?? existing.agmRequired ?? "unknown").toLowerCase();
+  return {
+    id: existing.id || body.id || crypto.randomUUID(),
+    make: String(body.make || existing.make || "").trim(),
+    model: String(body.model || existing.model || "").trim(),
+    yearRange: String(body.yearRange || existing.yearRange || "").trim(),
+    engineOrTrim: String(body.engineOrTrim || existing.engineOrTrim || "").trim(),
+    recommendedGroup: String(body.recommendedGroup || existing.recommendedGroup || "").trim(),
+    alternativeGroup: String(body.alternativeGroup || existing.alternativeGroup || "").trim(),
+    agmRequired: ["yes", "no", "unknown"].includes(agm) ? agm : "unknown",
+    notes: String(body.notes || existing.notes || "").trim(),
     createdAt: existing.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -543,9 +580,12 @@ function buildOrderMessageFa(order, product, currency = "CAD") {
     "",
     "محصول",
     productLine,
+    product?.battery?.groupSize ? `گروه باتری: ${product.battery.groupSize}` : "",
+    product?.battery?.testedCca ? `CCA تست‌شده: ${product.battery.testedCca}` : "",
     `شماره قطعه: ${product?.partNumber || order.customRequest?.partNumber || "ندارد"}`,
     `تعداد: ${order.quantity}`,
     `درخواست نصب: ${order.installRequested ? "بله" : "خیر"}`,
+    order.coreReturn ? "تحویل باتری کهنه: بله (مشتری باتری قدیمی را برمی‌گرداند)" : "",
     `نحوه تحویل: ${order.fulfillment === "pickup" ? "تحویل حضوری" : "ارسال (دلیوری)"}`,
     order.fulfillment === "pickup" ? `زمان تحویل حضوری: ${order.pickupTime || "وارد نشده"}` : "",
     order.customRequest?.details ? `جزئیات درخواست: ${order.customRequest.details}` : "",
@@ -556,6 +596,7 @@ function buildOrderMessageFa(order, product, currency = "CAD") {
       : "قیمت: تلفنی اعلام می‌شود",
     order.totals.priced ? `نصب: ${installFa}` : "",
     order.totals.priced ? `دلیوری: ${deliveryFa}` : "",
+    order.totals.priced && order.totals.coreDiscount > 0 ? `تخفیف تحویل باتری کهنه: -${money(order.totals.coreDiscount, currency)}` : "",
     order.totals.priced
       ? `مبلغ قابل پرداخت هنگام سرویس: ${money(order.totals.totalDue, currency)}`
       : "پیگیری: طی چند دقیقه با مشتری برای اعلام قیمت و موجودی تماس بگیرید.",
@@ -589,9 +630,12 @@ function buildOrderEmail(order, product, currency = "CAD") {
       "",
       "Product",
       productLine,
+      product?.battery?.groupSize ? `Battery group: ${product.battery.groupSize}` : "",
+      product?.battery?.testedCca ? `Tested CCA: ${product.battery.testedCca}` : "",
       `Part number: ${product?.partNumber || order.customRequest?.partNumber || "N/A"}`,
       `Quantity: ${order.quantity}`,
       `Installation requested: ${order.installRequested ? "Yes" : "No"}`,
+      order.coreReturn ? "Core return: Yes (customer returns old battery)" : "",
       `Fulfillment: ${order.fulfillment === "pickup" ? "Customer pickup" : "Delivery"}`,
       `Delivery requested: ${order.deliveryRequested ? "Yes" : "No"}`,
       order.fulfillment === "pickup" ? `Pickup time: ${order.pickupTime || "Not provided"}` : "",
@@ -603,6 +647,7 @@ function buildOrderEmail(order, product, currency = "CAD") {
         : "Price: To be confirmed by phone",
       order.totals.priced ? `Install: ${order.totals.installDisplay}` : "",
       order.totals.priced ? `Delivery: ${order.totals.deliveryDisplay}` : "",
+      order.totals.priced && order.totals.coreDiscount > 0 ? `Core return discount: -${money(order.totals.coreDiscount, currency)}` : "",
       order.totals.priced
         ? `Estimated total due at service: ${money(order.totals.totalDue, currency)}`
         : "Follow-up: Contact customer within a few minutes with price and availability.",
@@ -730,7 +775,8 @@ app.get("/api/catalog", async (_req, res, next) => {
       settings: publicSettings(db.settings),
       products,
       articles: db.articles.filter((article) => article.active !== false),
-      taxonomy: buildTaxonomy(products)
+      taxonomy: buildTaxonomy(products),
+      fitmentGuide: db.fitmentGuide || []
     });
   } catch (error) {
     next(error);
@@ -783,7 +829,8 @@ app.get("/api/admin/state", requireAdmin, (req, res) => {
     products: req.db.products,
     orders: req.db.orders.slice().reverse(),
     articles: req.db.articles.slice().reverse(),
-    media: req.db.media.slice().reverse()
+    media: req.db.media.slice().reverse(),
+    fitmentGuide: req.db.fitmentGuide || []
   });
 });
 
@@ -811,6 +858,7 @@ app.put("/api/admin/settings", requireAdmin, async (req, res, next) => {
         businessHours: String(body.businessHours ?? current.businessHours ?? "").trim(),
         footerNote: String(body.footerNote ?? current.footerNote ?? "").trim(),
         deliveryFee: numberField(body.deliveryFee, current.deliveryFee || 0),
+        coreBuyback: numberField(body.coreBuyback, current.coreBuyback ?? 10),
         currency: String(body.currency || current.currency || "CAD").trim(),
         adminPasscode: body.adminPasscode
           ? hashPasscode(String(body.adminPasscode).trim())
@@ -1139,6 +1187,61 @@ app.delete("/api/admin/orders/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
+app.post("/api/admin/fitments", requireAdmin, async (req, res, next) => {
+  try {
+    const entry = await withDbLock(async () => {
+      const db = ensureCollections(await readDb());
+      const created = fitmentGuideFromBody(req.body);
+      db.fitmentGuide.push(created);
+      await writeDb(db);
+      return created;
+    });
+    res.status(201).json({ fitment: entry });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.put("/api/admin/fitments/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const entry = await withDbLock(async () => {
+      const db = ensureCollections(await readDb());
+      const index = db.fitmentGuide.findIndex((item) => item.id === req.params.id);
+      if (index === -1) return null;
+      db.fitmentGuide[index] = fitmentGuideFromBody(req.body, db.fitmentGuide[index]);
+      await writeDb(db);
+      return db.fitmentGuide[index];
+    });
+    if (!entry) {
+      res.status(404).json({ error: "Fitment not found." });
+      return;
+    }
+    res.json({ fitment: entry });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete("/api/admin/fitments/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const removed = await withDbLock(async () => {
+      const db = ensureCollections(await readDb());
+      const before = db.fitmentGuide.length;
+      db.fitmentGuide = db.fitmentGuide.filter((item) => item.id !== req.params.id);
+      if (db.fitmentGuide.length === before) return false;
+      await writeDb(db);
+      return true;
+    });
+    if (!removed) {
+      res.status(404).json({ error: "Fitment not found." });
+      return;
+    }
+    res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.post("/api/orders", async (req, res, next) => {
   try {
     if (orderRateExceeded(req.ip || req.socket?.remoteAddress || "unknown")) {
@@ -1173,6 +1276,7 @@ app.post("/api/orders", async (req, res, next) => {
 
     const quantity = Math.max(1, Math.min(8, Math.round(numberField(body.quantity, 1))));
     const installRequested = body.installRequested === undefined ? true : boolField(body.installRequested);
+    const coreReturn = boolField(body.coreReturn);
     const isCustomRequest = !product;
     const currency = db.settings.currency || "CAD";
     const productSubtotal = product ? Number(product.price || 0) * quantity : 0;
@@ -1180,6 +1284,13 @@ app.post("/api/orders", async (req, res, next) => {
     const installFee = product && installRequested && !product.installFree ? rawInstallSubtotal : 0;
     const rawDeliveryFee = Number(db.settings.deliveryFee || 0);
     const deliveryFee = product && deliveryRequested ? rawDeliveryFee : 0;
+    const coreUnit = product
+      ? (Number(product.coreExchangeDiscount) > 0 ? Number(product.coreExchangeDiscount) : Number(db.settings.coreBuyback ?? 0))
+      : 0;
+    const coreDiscount = product && coreReturn && coreUnit > 0 ? coreUnit : 0;
+    const coreDisplay = coreUnit > 0
+      ? (coreReturn ? `-${money(coreDiscount, currency)}` : `Available: -${money(coreUnit, currency)} if you return your old battery`)
+      : "Not available";
     const installDisplay = isCustomRequest
       ? "To be confirmed"
       : !installRequested
@@ -1209,6 +1320,7 @@ app.post("/api/orders", async (req, res, next) => {
       productId: product?.id || null,
       quantity,
       installRequested,
+      coreReturn,
       fulfillment,
       deliveryRequested,
       pickupTime,
@@ -1241,9 +1353,12 @@ app.post("/api/orders", async (req, res, next) => {
         installFee,
         rawDeliveryFee,
         deliveryFee,
-        totalDue: isCustomRequest ? null : productSubtotal + installFee + deliveryFee,
+        coreUnit,
+        coreDiscount,
+        totalDue: isCustomRequest ? null : productSubtotal + installFee + deliveryFee - coreDiscount,
         installDisplay,
-        deliveryDisplay
+        deliveryDisplay,
+        coreDisplay
       }
     };
 

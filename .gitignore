@@ -9,3 +9,6 @@ data/backups/
 # Uploaded images are runtime data
 public/uploads/
 public/media/
+
+# local backups
+data/*.bak

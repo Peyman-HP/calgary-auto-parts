@@ -46,22 +46,25 @@
 
           <form class="finder-panel" id="finderForm">
             <div class="panel-heading">
-              <p>Fitment finder</p>
-              <strong>Choose your vehicle</strong>
+              <p>Battery finder</p>
+              <strong>Find the battery group for your vehicle</strong>
             </div>
-            <label>
-              Product
-              <select id="typeFilter"></select>
-            </label>
             <label>
               Vehicle make
               <select id="makeFilter"></select>
             </label>
             <label>
-              Vehicle model
+              Vehicle model &amp; years
               <select id="modelFilter"></select>
             </label>
-            <button class="button dark" type="submit">Show options</button>
+            <label class="finder-type-row">
+              Product type
+              <select id="typeFilter"></select>
+            </label>
+            <button class="button dark" type="submit">Show matching batteries</button>
+            <div class="finder-result" id="finderResult" hidden></div>
+            <p class="finder-trust">Final battery fitment is confirmed before installation. If the battery does not fit your vehicle, you do not pay.</p>
+            <p class="finder-trust muted">Not sure which battery fits? Send us your vehicle year, make, model, engine, or a photo of your current battery.</p>
           </form>
         </div>
       </section>

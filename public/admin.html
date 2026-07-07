@@ -43,6 +43,7 @@
             <button class="button" id="productsListTab" type="button" data-i18n="productsListTab">Products</button>
             <button class="button" id="articlesTab" type="button" data-i18n="articlesTab">Articles</button>
             <button class="button" id="mediaTab" type="button" data-i18n="mediaTab">Media</button>
+            <button class="button" id="fitmentsTab" type="button" data-i18n="fitmentsTab">Fitments</button>
             <button class="button" id="ordersTab" type="button" data-i18n="ordersTab">Orders</button>
             <button class="button" id="settingsTab" type="button" data-i18n="settingsTab">Settings</button>
           </div>
@@ -114,6 +115,10 @@
                   <input name="installFee" type="number" min="0" step="0.01" required>
                 </label>
                 <label>
+                  <span data-i18n="coreExchangeDiscount">Core return discount</span>
+                  <input name="coreExchangeDiscount" type="number" min="0" step="0.01" value="0">
+                </label>
+                <label>
                   <span data-i18n="ratingLabel">Star rating (0-5)</span>
                   <input name="rating" type="number" min="0" max="5" step="0.5" value="0">
                 </label>
@@ -161,6 +166,67 @@
                 <label class="full">
                   <span data-i18n="features">Features</span>
                   <textarea name="features" data-i18n-placeholder="featuresPlaceholder" placeholder="One feature per line"></textarea>
+                </label>
+                <label class="full">
+                  <span data-i18n="galleryLabel">Extra photo URLs (battery, top label, terminals, tester)</span>
+                  <textarea name="gallery" data-i18n-placeholder="galleryPlaceholder" placeholder="One image URL per line"></textarea>
+                </label>
+              </div>
+            </section>
+
+            <section class="admin-form-section">
+              <h3 data-i18n="batteryDetails">Used battery details</h3>
+              <p class="field-help" data-i18n="batteryHelp">Fill these for used batteries. Leave blank for non-battery products.</p>
+              <div class="form-grid">
+                <label>
+                  <span data-i18n="groupSize">Group size</span>
+                  <input name="groupSize" placeholder="35, 24F, 48/H6">
+                </label>
+                <label>
+                  <span data-i18n="batteryType">Battery type</span>
+                  <select name="batteryType">
+                    <option value=""></option>
+                    <option value="Flooded">Flooded</option>
+                    <option value="AGM">AGM</option>
+                    <option value="EFB">EFB</option>
+                  </select>
+                </label>
+                <label>
+                  <span data-i18n="ratedCca">Rated CCA</span>
+                  <input name="ratedCca" placeholder="640">
+                </label>
+                <label>
+                  <span data-i18n="testedCca">Tested CCA</span>
+                  <input name="testedCca" placeholder="610">
+                </label>
+                <label>
+                  <span data-i18n="voltage">Voltage</span>
+                  <input name="voltage" placeholder="12.6V">
+                </label>
+                <label>
+                  <span data-i18n="dateCode">Date code</span>
+                  <input name="dateCode" placeholder="2022/06">
+                </label>
+                <label>
+                  <span data-i18n="conditionGrade">Condition grade</span>
+                  <select name="conditionGrade">
+                    <option value=""></option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                  </select>
+                </label>
+                <label>
+                  <span data-i18n="warrantyDays">Warranty (days)</span>
+                  <input name="warrantyDays" type="number" min="0" placeholder="30">
+                </label>
+                <label>
+                  <span data-i18n="stockQuantity">Stock quantity</span>
+                  <input name="stockQuantity" type="number" min="0" placeholder="1">
+                </label>
+                <label>
+                  <span data-i18n="terminalLayout">Terminal layout</span>
+                  <input name="terminalLayout" placeholder="Top post / right positive">
                 </label>
               </div>
             </section>
@@ -323,6 +389,63 @@
             <div class="media-grid" id="mediaGrid"></div>
           </section>
 
+          <section class="admin-panel admin-view" id="fitmentsPanel" data-admin-view="fitments" hidden>
+            <form class="settings-form" id="fitmentForm">
+              <div class="panel-title-row">
+                <div>
+                  <p class="eyebrow" data-i18n="fitmentGuide">Fitment guide</p>
+                  <h2 id="fitmentFormTitle" data-i18n="addFitmentEntry">Add vehicle fitment</h2>
+                </div>
+                <button class="button ghost" id="resetFitmentForm" type="button" data-i18n="newFitment">New entry</button>
+              </div>
+              <input type="hidden" name="id">
+              <div class="form-grid">
+                <label>
+                  <span data-i18n="fMake">Make</span>
+                  <input name="make" required placeholder="Toyota">
+                </label>
+                <label>
+                  <span data-i18n="fModel">Model</span>
+                  <input name="model" required placeholder="Corolla">
+                </label>
+                <label>
+                  <span data-i18n="fYearRange">Year range</span>
+                  <input name="yearRange" placeholder="2009-2019">
+                </label>
+                <label>
+                  <span data-i18n="fEngine">Engine / trim</span>
+                  <input name="engineOrTrim" placeholder="Optional">
+                </label>
+                <label>
+                  <span data-i18n="fRecommended">Recommended group</span>
+                  <input name="recommendedGroup" required placeholder="35">
+                </label>
+                <label>
+                  <span data-i18n="fAlternative">Alternative group</span>
+                  <input name="alternativeGroup" placeholder="24F">
+                </label>
+                <label>
+                  <span data-i18n="fAgm">AGM required</span>
+                  <select name="agmRequired">
+                    <option value="unknown">Unknown</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                  </select>
+                </label>
+                <label class="full">
+                  <span data-i18n="fNotes">Notes</span>
+                  <input name="notes" placeholder="Optional">
+                </label>
+              </div>
+              <button class="button dark" type="submit" data-i18n="saveFitment">Save fitment</button>
+              <p class="status-text" id="fitmentStatus" aria-live="polite"></p>
+            </form>
+            <label class="full">
+              <input id="fitmentSearchInput" type="search" data-i18n-placeholder="searchFitments" placeholder="Search vehicles...">
+            </label>
+            <div class="product-admin-list" id="fitmentAdminList"></div>
+          </section>
+
           <section class="admin-panel admin-view" id="settingsPanel" data-admin-view="settings" hidden>
             <form class="settings-form" id="settingsForm">
               <div class="panel-title-row">
@@ -375,6 +498,10 @@
                 <label>
                   <span data-i18n="deliveryFee">Delivery fee</span>
                   <input name="deliveryFee" type="number" min="0" step="0.01">
+                </label>
+                <label>
+                  <span data-i18n="coreBuyback">Used battery buy-back / core discount</span>
+                  <input name="coreBuyback" type="number" min="0" step="0.01" placeholder="10">
                 </label>
                 <label>
                   <span data-i18n="adminPasscode">Admin passcode</span>

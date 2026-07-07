@@ -4,13 +4,16 @@ const state = {
   settings: null,
   products: [],
   articles: [],
+  fitmentGuide: [],
   taxonomy: { types: [], categories: [], vehicles: {} },
   visibleCount: PAGE_SIZE,
+  selectedFitment: null,
   filters: {
     category: "",
     type: "",
     make: "",
-    model: "",
+    fitmentId: "",
+    groupTokens: [],
     search: ""
   }
 };
@@ -28,6 +31,7 @@ const els = {
   makeFilter: document.querySelector("#makeFilter"),
   modelFilter: document.querySelector("#modelFilter"),
   finderForm: document.querySelector("#finderForm"),
+  finderResult: document.querySelector("#finderResult"),
   activeFilters: document.querySelector("#activeFilters"),
   productGrid: document.querySelector("#productGrid"),
   clearFilters: document.querySelector("#clearFilters"),
@@ -73,13 +77,31 @@ function productTitle(product) {
   return `${product.brand} ${product.model}`.trim();
 }
 
-function hasFitment(product, make, model) {
-  if (!make) return true;
-  return (product.fitments || []).some((fitment) => {
-    const makeMatch = fitment.make === make;
-    const modelMatch = !model || fitment.model === model;
-    return makeMatch && modelMatch;
-  });
+// Split a group string like "47/H5 or 48/H6" into comparable tokens: ["47","H5","48","H6"].
+function groupTokens(value) {
+  return String(value || "")
+    .toUpperCase()
+    .split(/[\s,/]+|(?:\bOR\b)/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+}
+
+function productGroupTokens(product) {
+  return groupTokens(product.battery?.groupSize);
+}
+
+function fitmentGroupTokens(fitment) {
+  if (!fitment) return [];
+  return [...new Set([
+    ...groupTokens(fitment.recommendedGroup),
+    ...groupTokens(fitment.alternativeGroup)
+  ])];
+}
+
+function productMatchesGroups(product, tokens) {
+  if (!tokens.length) return true;
+  const pTokens = productGroupTokens(product);
+  return pTokens.some((token) => tokens.includes(token));
 }
 
 function normalizeSearchText(value) {
@@ -141,7 +163,7 @@ function filteredProducts() {
   return state.products
     .filter((product) => !state.filters.category || product.category === state.filters.category)
     .filter((product) => !state.filters.type || product.type === state.filters.type)
-    .filter((product) => hasFitment(product, state.filters.make, state.filters.model))
+    .filter((product) => productMatchesGroups(product, state.filters.groupTokens))
     .filter((product) => productMatchesSearch(product, state.filters.search))
     .sort((a, b) => {
       const featuredSort = (b.featured === true) - (a.featured === true);
@@ -295,29 +317,67 @@ function renderCategoryNav() {
   });
 }
 
+function fitmentMakes() {
+  return [...new Set((state.fitmentGuide || []).map((f) => f.make).filter(Boolean))].sort();
+}
+
 function renderFilterOptions() {
   fillSelect(els.typeFilter, "All products", state.taxonomy.types, state.filters.type);
-  fillSelect(els.makeFilter, "Any make", Object.keys(state.taxonomy.vehicles), state.filters.make);
+  fillSelect(els.makeFilter, "Select make", fitmentMakes(), state.filters.make);
   fillModelOptions();
 }
 
 function fillModelOptions() {
-  const models = state.filters.make ? state.taxonomy.vehicles[state.filters.make] || [] : [];
-  fillSelect(els.modelFilter, state.filters.make ? "Any model" : "Choose make first", models, state.filters.model);
+  const entries = state.filters.make
+    ? (state.fitmentGuide || []).filter((f) => f.make === state.filters.make)
+    : [];
+  entries.sort((a, b) => `${a.model} ${a.yearRange}`.localeCompare(`${b.model} ${b.yearRange}`));
+  els.modelFilter.innerHTML = [
+    optionHtml("", state.filters.make ? "Select model & years" : "Choose make first", state.filters.fitmentId),
+    ...entries.map((f) => optionHtml(f.id, `${f.model} ${f.yearRange}`.trim(), state.filters.fitmentId))
+  ].join("");
   els.modelFilter.disabled = !state.filters.make;
+}
+
+function applyFitmentSelection(fitmentId) {
+  state.filters.fitmentId = fitmentId || "";
+  const fitment = (state.fitmentGuide || []).find((f) => f.id === fitmentId) || null;
+  state.selectedFitment = fitment;
+  state.filters.groupTokens = fitment ? fitmentGroupTokens(fitment) : [];
+  renderFinderResult();
+}
+
+function renderFinderResult() {
+  if (!els.finderResult) return;
+  const f = state.selectedFitment;
+  if (!f) {
+    els.finderResult.hidden = true;
+    els.finderResult.innerHTML = "";
+    return;
+  }
+  const groups = [f.recommendedGroup, f.alternativeGroup].filter(Boolean).join(" or ");
+  const agm = f.agmRequired && f.agmRequired !== "unknown" ? ` · AGM required: ${f.agmRequired}` : "";
+  els.finderResult.hidden = false;
+  els.finderResult.innerHTML = `
+    <strong>${escapeHtml(f.make)} ${escapeHtml(f.model)} ${escapeHtml(f.yearRange)}</strong>
+    <span>Recommended battery group: <b>${escapeHtml(groups)}</b>${escapeHtml(agm)}</span>
+    ${f.notes ? `<span>${escapeHtml(f.notes)}</span>` : ""}
+    <span class="muted">Final fitment is confirmed before installation. If it does not fit, you do not pay.</span>
+  `;
 }
 
 function renderActiveFilters(products) {
   const filters = [];
   if (state.filters.category) filters.push(state.filters.category);
   if (state.filters.type) filters.push(state.filters.type);
-  if (state.filters.make) filters.push(state.filters.make);
-  if (state.filters.model) filters.push(state.filters.model);
+  if (state.selectedFitment) {
+    filters.push(`${state.selectedFitment.make} ${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim());
+  }
   if (state.filters.search) filters.push(`Search: "${state.filters.search}"`);
 
   const base = `${products.length} option${products.length === 1 ? "" : "s"} found`;
   const filterText = filters.length ? ` for ${filters.join(" / ")}` : "";
-  els.activeFilters.textContent = `${base}${filterText}. Installation and delivery can be added or removed before submitting your order.`;
+  els.activeFilters.textContent = `${base}${filterText}. Final battery fitment is confirmed before installation — if it does not fit, you do not pay.`;
 }
 
 function installLine(product) {
@@ -353,6 +413,18 @@ function renderProducts(options = {}) {
       ratingEl.innerHTML = ratingStarsHtml(product.rating);
       card.querySelector("h3").after(ratingEl);
     }
+    if (isBattery(product)) {
+      const b = product.battery;
+      const badge = document.createElement("div");
+      badge.className = "battery-badge";
+      badge.textContent = [
+        `Group ${b.groupSize}`,
+        b.batteryType,
+        b.conditionGrade ? `Grade ${b.conditionGrade}` : "",
+        b.testedCca ? `${b.testedCca} tested CCA` : ""
+      ].filter(Boolean).join(" · ");
+      card.querySelector("h3").after(badge);
+    }
     card.querySelector(".description").textContent = product.description;
     card.querySelector(".price").textContent = money(product.price);
     card.querySelector(".install-line").innerHTML = installLine(product);
@@ -385,11 +457,13 @@ function renderProducts(options = {}) {
 }
 
 function requestedProductTitle() {
+  const vehicle = state.selectedFitment
+    ? `${state.selectedFitment.make} ${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim()
+    : state.filters.make;
   const parts = [
     state.filters.type,
     state.filters.search,
-    state.filters.make,
-    state.filters.model
+    vehicle
   ].filter(Boolean);
   return parts.length ? parts.join(" / ") : "Requested auto part";
 }
@@ -433,13 +507,21 @@ function pickupContactHtml() {
   `;
 }
 
-function totals(product, quantity, installRequested = true, deliveryRequested = true) {
+function coreUnitFor(product) {
+  const perProduct = Number(product.coreExchangeDiscount || 0);
+  if (perProduct > 0) return perProduct;
+  return Number(state.settings?.coreBuyback || 0);
+}
+
+function totals(product, quantity, installRequested = true, deliveryRequested = true, coreReturn = false) {
   const qty = Math.max(1, Number(quantity || 1));
   const productSubtotal = Number(product.price || 0) * qty;
   const rawInstallSubtotal = Number(product.installFee || 0) * qty;
   const installFee = installRequested && !product.installFree ? rawInstallSubtotal : 0;
   const rawDeliveryFee = Number(state.settings?.deliveryFee || 0);
   const deliveryFee = deliveryRequested ? rawDeliveryFee : 0;
+  const coreUnit = coreUnitFor(product);
+  const coreDiscount = coreReturn && coreUnit > 0 ? coreUnit : 0;
 
   return {
     productSubtotal,
@@ -447,8 +529,45 @@ function totals(product, quantity, installRequested = true, deliveryRequested = 
     installFee,
     rawDeliveryFee,
     deliveryFee,
-    totalDue: productSubtotal + installFee + deliveryFee
+    coreUnit,
+    coreDiscount,
+    totalDue: productSubtotal + installFee + deliveryFee - coreDiscount
   };
+}
+
+function isBattery(product) {
+  return Boolean(product.battery && product.battery.groupSize);
+}
+
+function batterySpecsHtml(product) {
+  const b = product.battery || {};
+  if (!b.groupSize) return "";
+  const rows = [
+    ["Group size", b.groupSize],
+    ["Type", b.batteryType],
+    ["Rated CCA", b.ratedCca],
+    ["Tested CCA", b.testedCca],
+    ["Voltage", b.voltage],
+    ["Condition", b.conditionGrade ? `Grade ${b.conditionGrade}` : ""],
+    ["Warranty", b.warrantyDays ? `${b.warrantyDays} days` : ""],
+    ["Date code", b.dateCode],
+    ["Terminals", b.terminalLayout]
+  ].filter(([, value]) => String(value || "").trim());
+  return `
+    <div class="battery-specs">
+      ${rows.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}
+    </div>
+  `;
+}
+
+function galleryHtml(product) {
+  const images = [product.image, ...(product.gallery || [])].filter(Boolean);
+  if (images.length < 2) return "";
+  return `
+    <div class="battery-gallery">
+      ${images.map((url) => `<img src="${escapeHtml(url)}" alt="${escapeHtml(productTitle(product))} photo" loading="lazy">`).join("")}
+    </div>
+  `;
 }
 
 function modelOptionsFor(make, selectedModel = "") {
@@ -461,14 +580,17 @@ function modelOptionsFor(make, selectedModel = "") {
 
 function openOrderDialog(product) {
   const initialQuantity = product.type === "Tire" ? 4 : 1;
-  const currentTotals = totals(product, initialQuantity, true, true);
+  const coreUnit = coreUnitFor(product);
+  const currentTotals = totals(product, initialQuantity, true, true, false);
   els.orderDialogBody.innerHTML = `
     <div class="order-layout">
       <aside class="order-summary">
         <img src="${escapeHtml(product.image || "/assets/hero-service.png")}" alt="${escapeHtml(productTitle(product))}">
         <span class="summary-label">${escapeHtml(product.type)} / ${escapeHtml(product.category)}</span>
         <h2>${escapeHtml(productTitle(product))}</h2>
-        <p>${escapeHtml(product.description)}</p>
+        ${batterySpecsHtml(product)}
+        <p class="pre-line">${escapeHtml(product.description)}</p>
+        ${galleryHtml(product)}
         <div class="summary-list" id="orderTotals">
           ${totalsHtml(product, currentTotals, initialQuantity, true, true)}
         </div>
@@ -476,6 +598,7 @@ function openOrderDialog(product) {
       <section class="order-form">
         <h2>Request service</h2>
         <p class="notice">No payment is collected online. Your order is sent to the owner, and you pay at your address after the service is completed.</p>
+        <p class="notice trust">Final battery fitment is confirmed before installation. If the battery does not fit your vehicle, you do not pay.</p>
         <form id="orderForm">
           <div class="form-grid">
             <label>
@@ -487,6 +610,13 @@ function openOrderDialog(product) {
               <span class="toggle-row">
                 <input id="orderInstallRequested" name="installRequested" type="checkbox" checked>
                 <span>Include installation</span>
+              </span>
+            </label>
+            <label id="coreReturnWrap"${coreUnit > 0 ? "" : " hidden"}>
+              Core return
+              <span class="toggle-row">
+                <input id="orderCoreReturn" name="coreReturn" type="checkbox">
+                <span>I will return my old battery (&minus;${money(coreUnit)})</span>
               </span>
             </label>
             <label>
@@ -530,6 +660,7 @@ function openOrderDialog(product) {
 
   const orderQuantity = document.querySelector("#orderQuantity");
   const orderInstallRequested = document.querySelector("#orderInstallRequested");
+  const orderCoreReturn = document.querySelector("#orderCoreReturn");
   const orderTotals = document.querySelector("#orderTotals");
   const orderForm = document.querySelector("#orderForm");
   const orderStatus = document.querySelector("#orderStatus");
@@ -539,9 +670,10 @@ function openOrderDialog(product) {
 
   const refreshTotals = () => {
     const installRequested = orderInstallRequested.checked;
+    const coreReturn = Boolean(orderCoreReturn && orderCoreReturn.checked);
     const pickup = isPickupMode(orderForm);
     const deliveryRequested = !pickup;
-    const nextTotals = totals(product, orderQuantity.value, installRequested, deliveryRequested);
+    const nextTotals = totals(product, orderQuantity.value, installRequested, deliveryRequested, coreReturn);
     orderTotals.innerHTML = totalsHtml(product, nextTotals, orderQuantity.value, installRequested, deliveryRequested, pickup);
     pickupTimeWrap.hidden = !pickup;
     pickupTimeInput.required = pickup;
@@ -551,6 +683,7 @@ function openOrderDialog(product) {
 
   orderQuantity.addEventListener("input", refreshTotals);
   orderInstallRequested.addEventListener("change", refreshTotals);
+  if (orderCoreReturn) orderCoreReturn.addEventListener("change", refreshTotals);
   orderForm.querySelectorAll("input[name='fulfillment']").forEach((input) => {
     input.addEventListener("change", refreshTotals);
   });
@@ -566,11 +699,12 @@ function openOrderDialog(product) {
       productId: product.id,
       quantity: Number(formData.get("quantity") || 1),
       installRequested: formData.get("installRequested") === "on",
+      coreReturn: formData.get("coreReturn") === "on",
       fulfillment: formData.get("fulfillment"),
       deliveryRequested: formData.get("fulfillment") !== "pickup",
       pickupTime: formData.get("pickupTime"),
-      vehicleMake: state.filters.make,
-      vehicleModel: state.filters.model,
+      vehicleMake: state.selectedFitment?.make || state.filters.make || "",
+      vehicleModel: state.selectedFitment ? `${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim() : "",
       name: formData.get("name"),
       phone: formData.get("phone"),
       address: formData.get("address"),
@@ -597,9 +731,9 @@ function openOrderDialog(product) {
 }
 
 function openCustomRequestDialog() {
-  const makes = Object.keys(state.taxonomy.vehicles);
-  const selectedMake = state.filters.make || "";
-  const selectedModel = state.filters.model || "";
+  const makes = fitmentMakes();
+  const selectedMake = state.selectedFitment?.make || state.filters.make || "";
+  const selectedModel = state.selectedFitment ? `${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim() : "";
   const title = requestedProductTitle();
 
   els.orderDialogBody.innerHTML = `
@@ -634,10 +768,8 @@ function openCustomRequestDialog() {
               </select>
             </label>
             <label>
-              Vehicle model
-              <select id="orderModel" name="vehicleModel">
-                ${modelOptionsFor(selectedMake, selectedModel)}
-              </select>
+              Vehicle model &amp; years
+              <input id="orderModel" name="vehicleModel" value="${escapeHtml(selectedModel)}" placeholder="Example: Corolla 2015">
             </label>
             <label>
               Fulfillment
@@ -678,8 +810,6 @@ function openCustomRequestDialog() {
     </div>
   `;
 
-  const orderMake = document.querySelector("#orderMake");
-  const orderModel = document.querySelector("#orderModel");
   const orderForm = document.querySelector("#orderForm");
   const orderStatus = document.querySelector("#orderStatus");
   const pickupTimeWrap = document.querySelector("#pickupTimeWrap");
@@ -692,9 +822,6 @@ function openCustomRequestDialog() {
     addressInput.required = !pickup;
     addressInput.placeholder = pickup ? "Optional if you are picking up" : "Street address, Calgary AB";
   };
-  orderMake.addEventListener("change", () => {
-    orderModel.innerHTML = modelOptionsFor(orderMake.value, "");
-  });
   orderForm.querySelectorAll("input[name='fulfillment']").forEach((input) => {
     input.addEventListener("change", refreshCustomFulfillment);
   });
@@ -764,10 +891,19 @@ function totalsHtml(product, total, quantity, installRequested, deliveryRequeste
         ? `<span><span class="strike">${money(total.rawDeliveryFee)}</span> Not requested</span>`
       : "<span>Not requested</span>";
 
+  let coreRow = "";
+  if (total.coreUnit > 0) {
+    const coreValue = total.coreDiscount > 0
+      ? `<span class="free">-${money(total.coreDiscount)}</span>`
+      : `<span>Available: -${money(total.coreUnit)} with old battery</span>`;
+    coreRow = `<div class="summary-row"><span>Core return</span>${coreValue}</div>`;
+  }
+
   return `
     <div class="summary-row"><span>Product (${quantity})</span><strong>${money(total.productSubtotal)}</strong></div>
     <div class="summary-row"><span>Installation</span>${install}</div>
     <div class="summary-row"><span>Delivery</span>${delivery}</div>
+    ${coreRow}
     <div class="summary-row total"><span>Due after service</span><strong>${money(total.totalDue)}</strong></div>
   `;
 }
@@ -805,6 +941,7 @@ function showOrderSuccess(result) {
     <div class="success">
       <strong>Order received</strong>
       <p>No payment was collected online.</p>
+      <p class="trust">Final battery fitment is confirmed before installation. If the battery does not fit your vehicle, you do not pay.</p>
       ${totalLine}
       ${pickupLine}
       <p>${escapeHtml(emailNote)}</p>
@@ -974,13 +1111,13 @@ function bindEvents() {
 
   els.makeFilter.addEventListener("change", () => {
     state.filters.make = els.makeFilter.value;
-    state.filters.model = "";
+    applyFitmentSelection("");
     fillModelOptions();
     renderProducts();
   });
 
   els.modelFilter.addEventListener("change", () => {
-    state.filters.model = els.modelFilter.value;
+    applyFitmentSelection(els.modelFilter.value);
     renderProducts();
   });
 
@@ -991,9 +1128,11 @@ function bindEvents() {
   });
 
   els.clearFilters.addEventListener("click", () => {
-    state.filters = { category: "", type: "", make: "", model: "", search: "" };
+    state.filters = { category: "", type: "", make: "", fitmentId: "", groupTokens: [], search: "" };
+    state.selectedFitment = null;
     els.searchInput.value = "";
     hideSearchSuggestions();
+    renderFinderResult();
     renderFilterOptions();
     renderProducts();
   });
@@ -1013,6 +1152,7 @@ async function init() {
   state.settings = data.settings;
   state.products = data.products;
   state.articles = data.articles || [];
+  state.fitmentGuide = data.fitmentGuide || [];
   state.taxonomy = data.taxonomy;
 
   try {

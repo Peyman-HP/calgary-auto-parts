@@ -15,8 +15,11 @@ const adminState = {
   orders: [],
   articles: [],
   media: [],
+  fitmentGuide: [],
   editingProductId: "",
   editingArticleId: "",
+  editingFitmentId: "",
+  fitmentQuery: "",
   currentFitments: []
 };
 
@@ -244,7 +247,41 @@ Object.assign(translations.en, {
   imageUploaded: "Image uploaded and compressed.",
   urlSlug: "URL slug",
   summary: "Summary",
-  writeArticle: "Write article"
+  writeArticle: "Write article",
+  coreExchangeDiscount: "Core return discount",
+  coreBuyback: "Used battery buy-back / core discount",
+  galleryLabel: "Extra photo URLs (battery, top label, terminals, tester)",
+  galleryPlaceholder: "One image URL per line",
+  batteryDetails: "Used battery details",
+  batteryHelp: "Fill these for used batteries. Leave blank for non-battery products.",
+  groupSize: "Group size",
+  batteryType: "Battery type",
+  ratedCca: "Rated CCA",
+  testedCca: "Tested CCA",
+  voltage: "Voltage",
+  dateCode: "Date code",
+  conditionGrade: "Condition grade",
+  warrantyDays: "Warranty (days)",
+  stockQuantity: "Stock quantity",
+  terminalLayout: "Terminal layout",
+  fitmentsTab: "Fitments",
+  fitmentGuide: "Fitment guide",
+  addFitmentEntry: "Add vehicle fitment",
+  editFitment: "Edit vehicle fitment",
+  newFitment: "New entry",
+  fMake: "Make",
+  fModel: "Model",
+  fYearRange: "Year range",
+  fEngine: "Engine / trim",
+  fRecommended: "Recommended group",
+  fAlternative: "Alternative group",
+  fAgm: "AGM required",
+  fNotes: "Notes",
+  saveFitment: "Save fitment",
+  savingFitment: "Saving fitment...",
+  fitmentSaved: "Fitment saved.",
+  searchFitments: "Search vehicles...",
+  noFitments: "No fitment entries yet."
 });
 
 Object.assign(translations.fa, {
@@ -298,7 +335,41 @@ Object.assign(translations.fa, {
   imageUploaded: "عکس آپلود و فشرده شد.",
   urlSlug: "آدرس URL",
   summary: "خلاصه",
-  writeArticle: "نوشتن مقاله"
+  writeArticle: "نوشتن مقاله",
+  coreExchangeDiscount: "تخفیف تحویل باتری کهنه",
+  coreBuyback: "خرید باتری کهنه / تخفیف تعویض",
+  galleryLabel: "آدرس عکس‌های بیشتر (باتری، برچسب، ترمینال، تستر)",
+  galleryPlaceholder: "هر آدرس عکس در یک خط",
+  batteryDetails: "مشخصات باتری دست دوم",
+  batteryHelp: "این‌ها را برای باتری‌های دست دوم پر کنید. برای محصولات غیرباتری خالی بگذارید.",
+  groupSize: "گروه (سایز)",
+  batteryType: "نوع باتری",
+  ratedCca: "CCA اسمی",
+  testedCca: "CCA تست‌شده",
+  voltage: "ولتاژ",
+  dateCode: "کد تاریخ",
+  conditionGrade: "درجه وضعیت",
+  warrantyDays: "گارانتی (روز)",
+  stockQuantity: "موجودی",
+  terminalLayout: "چیدمان ترمینال",
+  fitmentsTab: "سازگاری خودرو",
+  fitmentGuide: "راهنمای سازگاری",
+  addFitmentEntry: "افزودن سازگاری خودرو",
+  editFitment: "ویرایش سازگاری خودرو",
+  newFitment: "مورد جدید",
+  fMake: "برند",
+  fModel: "مدل",
+  fYearRange: "بازه سال",
+  fEngine: "موتور / تیپ",
+  fRecommended: "گروه پیشنهادی",
+  fAlternative: "گروه جایگزین",
+  fAgm: "نیاز به AGM",
+  fNotes: "یادداشت",
+  saveFitment: "ذخیره سازگاری",
+  savingFitment: "در حال ذخیره...",
+  fitmentSaved: "سازگاری ذخیره شد.",
+  searchFitments: "جستجوی خودرو...",
+  noFitments: "هنوز موردی ثبت نشده است."
 });
 
 const adminEls = {
@@ -313,6 +384,7 @@ const adminEls = {
   productsListTab: document.querySelector("#productsListTab"),
   articlesTab: document.querySelector("#articlesTab"),
   mediaTab: document.querySelector("#mediaTab"),
+  fitmentsTab: document.querySelector("#fitmentsTab"),
   ordersTab: document.querySelector("#ordersTab"),
   settingsTab: document.querySelector("#settingsTab"),
   productForm: document.querySelector("#productForm"),
@@ -341,6 +413,13 @@ const adminEls = {
   mediaGrid: document.querySelector("#mediaGrid"),
   productAdminList: document.querySelector("#productAdminList"),
   productSearchInput: document.querySelector("#productSearchInput"),
+  fitmentsPanel: document.querySelector("#fitmentsPanel"),
+  fitmentForm: document.querySelector("#fitmentForm"),
+  fitmentFormTitle: document.querySelector("#fitmentFormTitle"),
+  fitmentStatus: document.querySelector("#fitmentStatus"),
+  resetFitmentForm: document.querySelector("#resetFitmentForm"),
+  fitmentAdminList: document.querySelector("#fitmentAdminList"),
+  fitmentSearchInput: document.querySelector("#fitmentSearchInput"),
   orderList: document.querySelector("#orderList"),
   fitmentMakeChoice: document.querySelector("#fitmentMakeChoice"),
   fitmentMakeInput: document.querySelector("#fitmentMakeInput"),
@@ -474,6 +553,7 @@ function applyLanguage() {
     renderArticlesAdmin();
     renderMediaLibrary();
     renderMediaChoices();
+    renderFitmentGuide();
   }
 }
 
@@ -484,6 +564,7 @@ async function loadAdmin({ resetProductForm = true } = {}) {
   adminState.orders = data.orders || [];
   adminState.articles = data.articles || [];
   adminState.media = data.media || [];
+  adminState.fitmentGuide = data.fitmentGuide || [];
   adminState.taxonomy = data.taxonomy || deriveTaxonomy(adminState.products);
   try {
     adminMoney = new Intl.NumberFormat("en-CA", {
@@ -501,6 +582,7 @@ async function loadAdmin({ resetProductForm = true } = {}) {
   renderArticlesAdmin();
   renderMediaLibrary();
   renderMediaChoices();
+  renderFitmentGuide();
 }
 
 function showTab(name) {
@@ -509,6 +591,7 @@ function showTab(name) {
     products: adminEls.productsListTab,
     articles: adminEls.articlesTab,
     media: adminEls.mediaTab,
+    fitments: adminEls.fitmentsTab,
     orders: adminEls.ordersTab,
     settings: adminEls.settingsTab
   };
@@ -517,6 +600,7 @@ function showTab(name) {
     products: adminEls.productsPanel,
     articles: adminEls.articlesPanel,
     media: adminEls.mediaPanel,
+    fitments: adminEls.fitmentsPanel,
     orders: adminEls.ordersPanel,
     settings: adminEls.settingsPanel
   };
@@ -652,10 +736,24 @@ function fillProductForm(product = null) {
   fields.imageFile.value = "";
   fields.description.value = product?.description || "";
   fields.features.value = product ? featuresText(product) : "";
+  fields.gallery.value = (product?.gallery || []).join("\n");
   fields.active.checked = product ? product.active !== false : true;
   fields.installFree.checked = Boolean(product?.installFree);
   fields.rating.value = product?.rating ?? 0;
   fields.featured.checked = Boolean(product?.featured);
+  fields.coreExchangeDiscount.value = product?.coreExchangeDiscount ?? 0;
+
+  const b = product?.battery || {};
+  fields.groupSize.value = b.groupSize || "";
+  fields.batteryType.value = b.batteryType || "";
+  fields.ratedCca.value = b.ratedCca || "";
+  fields.testedCca.value = b.testedCca || "";
+  fields.voltage.value = b.voltage || "";
+  fields.dateCode.value = b.dateCode || "";
+  fields.conditionGrade.value = b.conditionGrade || "";
+  fields.warrantyDays.value = b.warrantyDays || "";
+  fields.stockQuantity.value = b.stockQuantity || "";
+  fields.terminalLayout.value = b.terminalLayout || "";
 
   setComboValue("type", product?.type || "");
   setComboValue("category", product?.category || "");
@@ -709,10 +807,17 @@ function productFormData() {
   data.append("model", comboValue("model"));
   data.append("features", JSON.stringify(features));
   data.append("fitments", JSON.stringify(adminState.currentFitments));
+  const gallery = fields.gallery.value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+  data.append("gallery", JSON.stringify(gallery));
   data.append("active", String(fields.active.checked));
   data.append("installFree", String(fields.installFree.checked));
   data.append("rating", fields.rating.value || "0");
   data.append("featured", String(fields.featured.checked));
+  data.append("coreExchangeDiscount", fields.coreExchangeDiscount.value || "0");
+  [
+    "groupSize", "batteryType", "ratedCca", "testedCca", "voltage",
+    "dateCode", "conditionGrade", "warrantyDays", "stockQuantity", "terminalLayout"
+  ].forEach((name) => data.append(name, fields[name].value));
   if (fields.imageFile.files[0]) data.append("imageFile", fields.imageFile.files[0]);
   if (fields.seoName) data.append("seoName", fields.seoName.value);
   return data;
@@ -886,6 +991,86 @@ function renderProductList() {
       await adminApi(`/api/admin/products/${encodeURIComponent(id)}`, { method: "DELETE" });
       await loadAdmin({ resetProductForm: false });
       showTab("products");
+    });
+  });
+}
+
+function fillFitmentForm(entry = null) {
+  adminState.editingFitmentId = entry?.id || "";
+  adminEls.fitmentFormTitle.textContent = entry ? t("editFitment") : t("addFitmentEntry");
+  const fields = adminEls.fitmentForm.elements;
+  fields.id.value = entry?.id || "";
+  fields.make.value = entry?.make || "";
+  fields.model.value = entry?.model || "";
+  fields.yearRange.value = entry?.yearRange || "";
+  fields.engineOrTrim.value = entry?.engineOrTrim || "";
+  fields.recommendedGroup.value = entry?.recommendedGroup || "";
+  fields.alternativeGroup.value = entry?.alternativeGroup || "";
+  fields.agmRequired.value = entry?.agmRequired || "unknown";
+  fields.notes.value = entry?.notes || "";
+  adminEls.fitmentStatus.textContent = "";
+}
+
+function fitmentFormData() {
+  const fields = adminEls.fitmentForm.elements;
+  return {
+    id: fields.id.value,
+    make: fields.make.value,
+    model: fields.model.value,
+    yearRange: fields.yearRange.value,
+    engineOrTrim: fields.engineOrTrim.value,
+    recommendedGroup: fields.recommendedGroup.value,
+    alternativeGroup: fields.alternativeGroup.value,
+    agmRequired: fields.agmRequired.value,
+    notes: fields.notes.value
+  };
+}
+
+function renderFitmentGuide() {
+  if (!adminEls.fitmentAdminList) return;
+  const query = adminState.fitmentQuery.toLowerCase().trim();
+  const entries = (adminState.fitmentGuide || [])
+    .filter((f) => !query || `${f.make} ${f.model} ${f.yearRange} ${f.recommendedGroup} ${f.alternativeGroup}`.toLowerCase().includes(query))
+    .slice()
+    .sort((a, b) => `${a.make} ${a.model}`.localeCompare(`${b.make} ${b.model}`));
+
+  if (!entries.length) {
+    adminEls.fitmentAdminList.innerHTML = `<div class="empty-state">${escapeHtml(t("noFitments"))}</div>`;
+    return;
+  }
+
+  adminEls.fitmentAdminList.innerHTML = entries
+    .map((f) => {
+      const groups = [f.recommendedGroup, f.alternativeGroup].filter(Boolean).join(" / ");
+      const agm = f.agmRequired && f.agmRequired !== "unknown" ? ` · AGM: ${f.agmRequired}` : "";
+      return `
+        <article class="admin-item" data-id="${escapeHtml(f.id)}">
+          <div>
+            <strong>${escapeHtml(f.make)} ${escapeHtml(f.model)} ${escapeHtml(f.yearRange)}</strong>
+            <small>Group ${escapeHtml(groups)}${escapeHtml(agm)}${f.engineOrTrim ? ` · ${escapeHtml(f.engineOrTrim)}` : ""}</small>
+          </div>
+          <div class="admin-item-actions">
+            <button class="button ghost" type="button" data-action="edit">${escapeHtml(t("editProductButton"))}</button>
+            <button class="button ghost" type="button" data-action="delete">${escapeHtml(t("deleteProduct"))}</button>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+
+  adminEls.fitmentAdminList.querySelectorAll("button").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const id = button.closest(".admin-item").dataset.id;
+      const entry = adminState.fitmentGuide.find((f) => f.id === id);
+      if (button.dataset.action === "edit") {
+        fillFitmentForm(entry);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+      if (!confirm(`${t("deleteConfirm")} ${entry.make} ${entry.model} ${entry.yearRange}?`)) return;
+      await adminApi(`/api/admin/fitments/${encodeURIComponent(id)}`, { method: "DELETE" });
+      await loadAdmin({ resetProductForm: false });
+      showTab("fitments");
     });
   });
 }
@@ -1111,6 +1296,7 @@ function fillSettingsForm() {
   fields.businessHours.value = settings.businessHours || "";
   fields.footerNote.value = settings.footerNote || "";
   if (fields.deliveryFee) fields.deliveryFee.value = settings.deliveryFee ?? 0;
+  if (fields.coreBuyback) fields.coreBuyback.value = settings.coreBuyback ?? 10;
   fields.adminPasscode.value = "";
   fields.smtpHost.value = settings.smtp?.host || "";
   fields.smtpPort.value = settings.smtp?.port || 587;
@@ -1180,6 +1366,7 @@ function bindAdminEvents() {
   adminEls.productsListTab.addEventListener("click", () => showTab("products"));
   adminEls.articlesTab.addEventListener("click", () => showTab("articles"));
   adminEls.mediaTab.addEventListener("click", () => showTab("media"));
+  adminEls.fitmentsTab.addEventListener("click", () => showTab("fitments"));
   adminEls.ordersTab.addEventListener("click", () => showTab("orders"));
   adminEls.settingsTab.addEventListener("click", () => showTab("settings"));
   adminEls.quickAddProduct.addEventListener("click", () => {
@@ -1189,6 +1376,30 @@ function bindAdminEvents() {
   adminEls.productSearchInput.addEventListener("input", () => {
     adminState.productQuery = adminEls.productSearchInput.value;
     renderProductList();
+  });
+  adminEls.fitmentSearchInput.addEventListener("input", () => {
+    adminState.fitmentQuery = adminEls.fitmentSearchInput.value;
+    renderFitmentGuide();
+  });
+  adminEls.resetFitmentForm.addEventListener("click", () => fillFitmentForm());
+  adminEls.fitmentForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    adminEls.fitmentStatus.textContent = t("savingFitment");
+    try {
+      const id = adminState.editingFitmentId;
+      const route = id ? `/api/admin/fitments/${encodeURIComponent(id)}` : "/api/admin/fitments";
+      await adminApi(route, {
+        method: id ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fitmentFormData())
+      });
+      adminEls.fitmentStatus.textContent = t("fitmentSaved");
+      await loadAdmin({ resetProductForm: false });
+      fillFitmentForm();
+      showTab("fitments");
+    } catch (error) {
+      adminEls.fitmentStatus.textContent = error.message;
+    }
   });
   adminEls.resetProductForm.addEventListener("click", () => fillProductForm());
   adminEls.productMediaChoice.addEventListener("change", () => {
@@ -1283,6 +1494,9 @@ function bindAdminEvents() {
       deliveryFee: fields.deliveryFee
         ? Number(fields.deliveryFee.value || 0)
         : Number(adminState.settings.deliveryFee || 0),
+      coreBuyback: fields.coreBuyback
+        ? Number(fields.coreBuyback.value || 0)
+        : Number(adminState.settings.coreBuyback ?? 10),
       adminPasscode: fields.adminPasscode.value,
       smtp: {
         host: fields.smtpHost.value,

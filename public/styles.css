@@ -739,6 +739,92 @@ input[type="checkbox"] {
   line-height: 1.5;
 }
 
+.finder-type-row {
+  margin-top: 2px;
+}
+
+.finder-result {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(15, 143, 104, 0.12);
+  border: 1px solid rgba(15, 143, 104, 0.3);
+  font-size: 0.92rem;
+}
+
+.finder-result strong {
+  font-size: 1rem;
+}
+
+.finder-result .muted,
+.finder-trust.muted {
+  color: var(--muted);
+}
+
+.finder-trust {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.battery-badge {
+  display: inline-block;
+  margin: 6px 0 2px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--green-dark);
+}
+
+.battery-specs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 14px;
+  margin: 10px 0;
+}
+
+.battery-specs > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.86rem;
+}
+
+.battery-specs span {
+  color: var(--muted);
+}
+
+.battery-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.battery-gallery img {
+  width: 100%;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.pre-line {
+  white-space: pre-line;
+}
+
+.notice.trust,
+.success .trust {
+  background: rgba(15, 143, 104, 0.1);
+  border-left: 3px solid var(--green);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
 .site-footer {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) minmax(260px, auto);
