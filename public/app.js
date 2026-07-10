@@ -1418,6 +1418,10 @@ function initVideoBackdrop() {
   video.preload = "auto";
   video.load();
 
+  const markVideoReady = () => {
+    document.body.classList.add("video-ready");
+  };
+
   backdrop.hidden = false;
   document.body.classList.add("has-video-bg");
 
@@ -1455,7 +1459,13 @@ function initVideoBackdrop() {
     }
     requestAnimationFrame(watch);
   };
-  video.addEventListener("loadedmetadata", () => { lastY = -1; });
+  video.addEventListener("loadedmetadata", () => {
+    lastY = -1;
+    scrub(0.02);
+  });
+  video.addEventListener("loadeddata", markVideoReady, { once: true });
+  video.addEventListener("canplay", markVideoReady, { once: true });
+  if (video.readyState >= 2) markVideoReady();
   update();
   requestAnimationFrame(watch);
 }
