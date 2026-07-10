@@ -606,9 +606,9 @@ input[type="checkbox"] {
 .product-media img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
-  transform: scale(1.02);
+  padding: 8px;
 }
 
 .product-body {
@@ -1569,8 +1569,7 @@ input[type="checkbox"] {
   }
 
   .product-media img {
-    transform: scale(1.08);
-    object-position: center 42%;
+    padding: 6px;
   }
 
   .article-header {
