@@ -1440,6 +1440,7 @@ function initVideoBackdrop() {
       ? mobileScrubDistance
       : document.documentElement.scrollHeight - window.innerHeight;
     const p = maxScroll > 0 ? Math.max(0, Math.min(1, window.scrollY / maxScroll)) : 0;
+    video.style.opacity = "1";
     scrub(p);
     // Keep the hero vivid at the top, wash the video into the page as you scroll.
     overlay.style.opacity = String(Math.min(0.94, (isMobile ? 0.14 : 0.2) + p * (isMobile ? 1.8 : 1.5)));

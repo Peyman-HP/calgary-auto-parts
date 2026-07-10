@@ -1980,15 +1980,16 @@ textarea,
 .order-dialog {
   border-radius: var(--r-xl);
   box-shadow: var(--sh-3);
-  overflow: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
-/* --- Footer: floating rounded card, all four corners --- */
+/* --- Footer: blend with the page body instead of looking like a card --- */
 .site-footer {
-  margin: 8px clamp(10px, 3vw, 22px) 16px;
-  border: 0;
-  border-radius: var(--r-lg);
-  box-shadow: var(--sh-2);
+  margin: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 /* --- Mobile polish: slightly tighter radii so small cards don't look bulky --- */
