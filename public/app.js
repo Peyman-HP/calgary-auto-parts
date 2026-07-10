@@ -1181,3 +1181,75 @@ init().catch((error) => {
       </div>
     </div>`;
 });
+
+// Scroll-scrubbed cinematic video backdrop.
+// Video A plays through the first half of the page, crossfades into video B
+// for the second half; scrolling back rewinds. Desktop only, respects
+// prefers-reduced-motion, and loads after everything else so it never slows
+// down the storefront.
+function initVideoBackdrop() {
+  const backdrop = document.querySelector("#videoBackdrop");
+  if (!backdrop) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (window.matchMedia("(max-width: 767px)").matches) return;
+
+  const videoA = document.querySelector("#bgVideoA");
+  const videoB = document.querySelector("#bgVideoB");
+  const overlay = document.querySelector("#videoBackdropOverlay");
+  [videoA, videoB].forEach((video) => {
+    video.preload = "auto";
+    video.load();
+  });
+
+  backdrop.hidden = false;
+  document.body.classList.add("has-video-bg");
+
+  const SPLIT = 0.5;
+  const FADE = 0.08;
+  let ticking = false;
+
+  const scrub = (video, progress) => {
+    if (video.readyState < 1 || !Number.isFinite(video.duration)) return;
+    const target = Math.max(0, Math.min(video.duration - 0.05, progress * video.duration));
+    if (Math.abs(video.currentTime - target) > 0.02) {
+      video.currentTime = target;
+    }
+  };
+
+  const update = () => {
+    ticking = false;
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    const p = maxScroll > 0 ? Math.max(0, Math.min(1, window.scrollY / maxScroll)) : 0;
+
+    const progressA = Math.min(1, p / (SPLIT + FADE));
+    const progressB = Math.max(0, Math.min(1, (p - (SPLIT - FADE)) / (1 - SPLIT + FADE)));
+    const fade = Math.max(0, Math.min(1, (p - (SPLIT - FADE)) / (2 * FADE)));
+
+    videoA.style.opacity = String(1 - fade);
+    videoB.style.opacity = String(fade);
+    if (fade < 1) scrub(videoA, progressA);
+    if (fade > 0) scrub(videoB, progressB);
+
+    // Keep the hero vivid at the top, wash the video into the page as you scroll.
+    overlay.style.opacity = String(Math.min(0.94, 0.2 + p * 1.5));
+  };
+
+  const requestUpdate = () => {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+  };
+
+  window.addEventListener("scroll", requestUpdate, { passive: true });
+  window.addEventListener("resize", requestUpdate, { passive: true });
+  videoA.addEventListener("loadedmetadata", requestUpdate);
+  videoB.addEventListener("loadedmetadata", requestUpdate);
+  update();
+}
+
+if (document.readyState === "complete") {
+  initVideoBackdrop();
+} else {
+  window.addEventListener("load", initVideoBackdrop);
+}
