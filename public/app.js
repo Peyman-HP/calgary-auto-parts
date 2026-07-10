@@ -1,4 +1,5 @@
 const PAGE_SIZE = 12;
+const CUSTOM_FITMENT_VALUE = "__custom__";
 
 const state = {
   settings: null,
@@ -13,6 +14,7 @@ const state = {
     type: "",
     make: "",
     fitmentId: "",
+    customVehicleModel: "",
     groupTokens: [],
     search: ""
   }
@@ -160,6 +162,7 @@ function productMatchesSearch(product, query) {
 }
 
 function filteredProducts() {
+  if (state.filters.fitmentId === CUSTOM_FITMENT_VALUE || state.filters.customVehicleModel) return [];
   return state.products
     .filter((product) => !state.filters.category || product.category === state.filters.category)
     .filter((product) => !state.filters.type || product.type === state.filters.type)
@@ -332,24 +335,61 @@ function fillModelOptions() {
     ? (state.fitmentGuide || []).filter((f) => f.make === state.filters.make)
     : [];
   entries.sort((a, b) => `${a.model} ${a.yearRange}`.localeCompare(`${b.model} ${b.yearRange}`));
+  const selectedValue = state.filters.customVehicleModel ? CUSTOM_FITMENT_VALUE : state.filters.fitmentId;
   els.modelFilter.innerHTML = [
-    optionHtml("", state.filters.make ? "Select model & years" : "Choose make first", state.filters.fitmentId),
-    ...entries.map((f) => optionHtml(f.id, `${f.model} ${f.yearRange}`.trim(), state.filters.fitmentId))
+    optionHtml("", state.filters.make ? "Select model & years" : "Choose make first", selectedValue),
+    ...entries.map((f) => optionHtml(f.id, `${f.model} ${f.yearRange}`.trim(), selectedValue)),
+    state.filters.make ? optionHtml(CUSTOM_FITMENT_VALUE, "Other / enter manually", selectedValue) : ""
   ].join("");
   els.modelFilter.disabled = !state.filters.make;
+  syncCustomModelInput();
 }
 
 function applyFitmentSelection(fitmentId) {
+  if (fitmentId === CUSTOM_FITMENT_VALUE) {
+    state.filters.fitmentId = CUSTOM_FITMENT_VALUE;
+    state.selectedFitment = null;
+    state.filters.groupTokens = [];
+    syncCustomModelInput();
+    renderFinderResult();
+    return;
+  }
   state.filters.fitmentId = fitmentId || "";
+  state.filters.customVehicleModel = "";
   const fitment = (state.fitmentGuide || []).find((f) => f.id === fitmentId) || null;
   state.selectedFitment = fitment;
   state.filters.groupTokens = fitment ? fitmentGroupTokens(fitment) : [];
+  syncCustomModelInput();
   renderFinderResult();
+}
+
+function customVehicleLabel() {
+  return [state.filters.make, state.filters.customVehicleModel].filter(Boolean).join(" ").trim();
+}
+
+function syncCustomModelInput() {
+  const wrap = document.querySelector("#customModelWrap");
+  const input = document.querySelector("#customModelInput");
+  if (!wrap || !input) return;
+  const visible = Boolean(state.filters.make && els.modelFilter.value === CUSTOM_FITMENT_VALUE);
+  wrap.hidden = !visible;
+  input.disabled = !visible;
+  input.value = state.filters.customVehicleModel || "";
+  input.required = visible;
 }
 
 function renderFinderResult() {
   if (!els.finderResult) return;
   const f = state.selectedFitment;
+  if (!f && state.filters.customVehicleModel) {
+    els.finderResult.hidden = false;
+    els.finderResult.innerHTML = `
+      <strong>${escapeHtml(customVehicleLabel())}</strong>
+      <span>We will confirm the correct battery group and availability by phone.</span>
+      <span class="muted">Submit a request and the exact vehicle details will be sent to the owner.</span>
+    `;
+    return;
+  }
   if (!f) {
     els.finderResult.hidden = true;
     els.finderResult.innerHTML = "";
@@ -372,6 +412,8 @@ function renderActiveFilters(products) {
   if (state.filters.type) filters.push(state.filters.type);
   if (state.selectedFitment) {
     filters.push(`${state.selectedFitment.make} ${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim());
+  } else if (state.filters.customVehicleModel) {
+    filters.push(customVehicleLabel());
   }
   if (state.filters.search) filters.push(`Search: "${state.filters.search}"`);
 
@@ -459,7 +501,7 @@ function renderProducts(options = {}) {
 function requestedProductTitle() {
   const vehicle = state.selectedFitment
     ? `${state.selectedFitment.make} ${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim()
-    : state.filters.make;
+    : customVehicleLabel() || state.filters.make;
   const parts = [
     state.filters.type,
     state.filters.search,
@@ -704,7 +746,7 @@ function openOrderDialog(product) {
       deliveryRequested: formData.get("fulfillment") !== "pickup",
       pickupTime: formData.get("pickupTime"),
       vehicleMake: state.selectedFitment?.make || state.filters.make || "",
-      vehicleModel: state.selectedFitment ? `${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim() : "",
+      vehicleModel: state.selectedFitment ? `${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim() : state.filters.customVehicleModel || "",
       name: formData.get("name"),
       phone: formData.get("phone"),
       address: formData.get("address"),
@@ -733,7 +775,7 @@ function openOrderDialog(product) {
 function openCustomRequestDialog() {
   const makes = fitmentMakes();
   const selectedMake = state.selectedFitment?.make || state.filters.make || "";
-  const selectedModel = state.selectedFitment ? `${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim() : "";
+  const selectedModel = state.selectedFitment ? `${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim() : state.filters.customVehicleModel || "";
   const title = requestedProductTitle();
 
   els.orderDialogBody.innerHTML = `
@@ -1111,6 +1153,7 @@ function bindEvents() {
 
   els.makeFilter.addEventListener("change", () => {
     state.filters.make = els.makeFilter.value;
+    state.filters.customVehicleModel = "";
     applyFitmentSelection("");
     fillModelOptions();
     renderProducts();
@@ -1121,6 +1164,18 @@ function bindEvents() {
     renderProducts();
   });
 
+  const customModelInput = document.querySelector("#customModelInput");
+  if (customModelInput) {
+    customModelInput.addEventListener("input", () => {
+      state.filters.customVehicleModel = customModelInput.value.trim();
+      state.filters.fitmentId = CUSTOM_FITMENT_VALUE;
+      state.selectedFitment = null;
+      state.filters.groupTokens = [];
+      renderFinderResult();
+      renderProducts();
+    });
+  }
+
   els.finderForm.addEventListener("submit", (event) => {
     event.preventDefault();
     document.querySelector("#shop").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1128,7 +1183,7 @@ function bindEvents() {
   });
 
   els.clearFilters.addEventListener("click", () => {
-    state.filters = { category: "", type: "", make: "", fitmentId: "", groupTokens: [], search: "" };
+    state.filters = { category: "", type: "", make: "", fitmentId: "", customVehicleModel: "", groupTokens: [], search: "" };
     state.selectedFitment = null;
     els.searchInput.value = "";
     hideSearchSuggestions();

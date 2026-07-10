@@ -43,12 +43,53 @@ async function ensureRuntimeDirs() {
 }
 
 const DB_SAMPLE_PATH = path.join(DATA_DIR, "db.sample.json");
+const FITMENT_DEFAULTS_MIGRATION = "fitmentGuideDefaults20260710";
+
+function mergeDefaultFitments(db, sampleDb) {
+  if (db.migrations?.[FITMENT_DEFAULTS_MIGRATION]) return false;
+  const sampleFitments = Array.isArray(sampleDb.fitmentGuide) ? sampleDb.fitmentGuide : [];
+  if (!sampleFitments.length) return false;
+
+  db.fitmentGuide ||= [];
+  const existing = new Set(
+    db.fitmentGuide.map((fitment) => [
+      fitment.make,
+      fitment.model,
+      fitment.yearRange
+    ].map((part) => String(part || "").trim().toLowerCase()).join("|"))
+  );
+
+  let added = 0;
+  sampleFitments.forEach((fitment) => {
+    const key = [
+      fitment.make,
+      fitment.model,
+      fitment.yearRange
+    ].map((part) => String(part || "").trim().toLowerCase()).join("|");
+    if (!key.replace(/\|/g, "") || existing.has(key)) return;
+    existing.add(key);
+    db.fitmentGuide.push(fitment);
+    added += 1;
+  });
+
+  db.migrations ||= {};
+  db.migrations[FITMENT_DEFAULTS_MIGRATION] = {
+    appliedAt: new Date().toISOString(),
+    added
+  };
+  return true;
+}
 
 async function readDb() {
   await ensureRuntimeDirs();
   try {
     const raw = await fs.readFile(DB_PATH, "utf8");
-    return JSON.parse(raw);
+    const db = JSON.parse(raw);
+    const sample = JSON.parse(await fs.readFile(DB_SAMPLE_PATH, "utf8"));
+    if (mergeDefaultFitments(db, sample)) {
+      await fs.writeFile(DB_PATH, `${JSON.stringify(db, null, 2)}\n`, "utf8");
+    }
+    return db;
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
     // Fresh checkout: seed the live database from the bundled sample.
