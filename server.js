@@ -767,6 +767,54 @@ async function sendOrderNotifications(settings, order, product) {
   return results;
 }
 
+const SITE_ORIGIN = process.env.SITE_ORIGIN || "https://epicvolt.net";
+
+app.get("/robots.txt", (_req, res) => {
+  res.type("text/plain").send([
+    "User-agent: *",
+    "Allow: /",
+    "Disallow: /admin.html",
+    "",
+    `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
+    ""
+  ].join("\n"));
+});
+
+app.get("/sitemap.xml", async (_req, res, next) => {
+  try {
+    const db = ensureCollections(await readDb());
+    const urls = [
+      { loc: `${SITE_ORIGIN}/`, priority: "1.0" },
+      { loc: `${SITE_ORIGIN}/articles.html`, priority: "0.6" },
+      ...db.articles
+        .filter((article) => article.active !== false)
+        .map((article) => ({
+          loc: `${SITE_ORIGIN}/article.html?slug=${encodeURIComponent(article.slug)}`,
+          lastmod: String(article.updatedAt || article.createdAt || "").slice(0, 10),
+          priority: "0.7"
+        }))
+    ];
+
+    const xml = [
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+      "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
+      ...urls.map((url) => [
+        "  <url>",
+        `    <loc>${url.loc}</loc>`,
+        url.lastmod ? `    <lastmod>${url.lastmod}</lastmod>` : "",
+        `    <priority>${url.priority}</priority>`,
+        "  </url>"
+      ].filter(Boolean).join("\n")),
+      "</urlset>",
+      ""
+    ].join("\n");
+
+    res.type("application/xml").send(xml);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get("/api/catalog", async (_req, res, next) => {
   try {
     const db = ensureCollections(await readDb());
