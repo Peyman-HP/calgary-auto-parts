@@ -81,6 +81,15 @@ function productTitle(product) {
   return `${product.brand} ${product.model}`.trim();
 }
 
+function compactDescription(value, maxLength = 118) {
+  const text = String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length <= maxLength) return text;
+  const cut = text.lastIndexOf(" ", maxLength);
+  return `${text.slice(0, cut > 70 ? cut : maxLength).trim()}...`;
+}
+
 // Split a group string like "47/H5 or 48/H6" into comparable tokens: ["47","H5","48","H6"].
 function groupTokens(value) {
   return String(value || "")
@@ -490,7 +499,7 @@ function renderProducts(options = {}) {
       ].filter(Boolean).join(" · ");
       card.querySelector("h3").after(badge);
     }
-    card.querySelector(".description").textContent = product.description;
+    card.querySelector(".description").textContent = compactDescription(product.description);
     card.querySelector(".price").textContent = money(product.price);
     card.querySelector(".install-line").innerHTML = installLine(product);
 
