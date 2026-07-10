@@ -1191,11 +1191,17 @@ function initVideoBackdrop() {
   const backdrop = document.querySelector("#videoBackdrop");
   if (!backdrop) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  if (window.matchMedia("(max-width: 767px)").matches) return;
 
   const videoA = document.querySelector("#bgVideoA");
   const videoB = document.querySelector("#bgVideoB");
   const overlay = document.querySelector("#videoBackdropOverlay");
+
+  // Phones get lighter 640px encodes (~1.3MB total instead of ~4.3MB).
+  if (window.matchMedia("(max-width: 767px)").matches) {
+    videoA.src = "/assets/bg-cars-mobile.mp4";
+    videoB.src = "/assets/bg-energy-mobile.mp4";
+  }
+
   [videoA, videoB].forEach((video) => {
     video.preload = "auto";
     video.load();
@@ -1206,7 +1212,6 @@ function initVideoBackdrop() {
 
   const SPLIT = 0.5;
   const FADE = 0.08;
-  let ticking = false;
 
   const scrub = (video, progress) => {
     if (video.readyState < 1 || !Number.isFinite(video.duration)) return;
@@ -1217,7 +1222,6 @@ function initVideoBackdrop() {
   };
 
   const update = () => {
-    ticking = false;
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     const p = maxScroll > 0 ? Math.max(0, Math.min(1, window.scrollY / maxScroll)) : 0;
 
@@ -1234,18 +1238,24 @@ function initVideoBackdrop() {
     overlay.style.opacity = String(Math.min(0.94, 0.2 + p * 1.5));
   };
 
-  const requestUpdate = () => {
-    if (!ticking) {
-      ticking = true;
-      requestAnimationFrame(update);
+  // rAF watcher instead of scroll events: works identically across desktop,
+  // mobile browsers, and embedded webviews, and costs nothing while idle.
+  let lastY = -1;
+  let lastHeight = -1;
+  const watch = () => {
+    const y = window.scrollY;
+    const height = document.documentElement.scrollHeight;
+    if (y !== lastY || height !== lastHeight) {
+      lastY = y;
+      lastHeight = height;
+      update();
     }
+    requestAnimationFrame(watch);
   };
-
-  window.addEventListener("scroll", requestUpdate, { passive: true });
-  window.addEventListener("resize", requestUpdate, { passive: true });
-  videoA.addEventListener("loadedmetadata", requestUpdate);
-  videoB.addEventListener("loadedmetadata", requestUpdate);
+  videoA.addEventListener("loadedmetadata", () => { lastY = -1; });
+  videoB.addEventListener("loadedmetadata", () => { lastY = -1; });
   update();
+  requestAnimationFrame(watch);
 }
 
 if (document.readyState === "complete") {
