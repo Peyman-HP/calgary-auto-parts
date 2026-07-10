@@ -49,7 +49,8 @@ const els = {
   footerPhone: document.querySelector("#footerPhone"),
   footerEmail: document.querySelector("#footerEmail"),
   footerLocation: document.querySelector("#footerLocation"),
-  footerHours: document.querySelector("#footerHours")
+  footerHours: document.querySelector("#footerHours"),
+  heroPhoneLink: document.querySelector("#heroPhoneLink")
 };
 
 function money(value) {
@@ -79,6 +80,13 @@ function fillSelect(select, placeholder, options, selectedValue = "") {
 
 function productTitle(product) {
   return `${product.brand} ${product.model}`.trim();
+}
+
+function phoneHref(value) {
+  const raw = String(value || "").trim();
+  const digits = raw.replace(/\D/g, "");
+  if (raw.startsWith("+")) return `tel:+${digits}`;
+  return digits.length === 10 ? `tel:+1${digits}` : digits ? `tel:${digits}` : "#";
 }
 
 function compactDescription(value, maxLength = 118) {
@@ -1164,6 +1172,10 @@ function renderFooter() {
   els.footerEmail.textContent = settings.publicEmail ? `Email: ${settings.publicEmail}` : "";
   els.footerLocation.textContent = settings.serviceLocation ? `Location: ${settings.serviceLocation}` : "";
   els.footerHours.textContent = settings.businessHours ? `Hours: ${settings.businessHours}` : "";
+  if (els.heroPhoneLink && settings.phone) {
+    els.heroPhoneLink.textContent = settings.phone;
+    els.heroPhoneLink.href = phoneHref(settings.phone);
+  }
 }
 
 function bindEvents() {
