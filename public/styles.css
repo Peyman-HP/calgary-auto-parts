@@ -1816,3 +1816,178 @@ input[type="checkbox"] {
     right: 8px;
   }
 }
+
+/* =====================================================================
+   Modern design system v2 — rounded corners, layered depth, soft shadows.
+   Appended so it overrides the base rules above. Fully responsive.
+   ===================================================================== */
+:root {
+  --r-sm: 12px;   /* form controls, small chips */
+  --r-md: 18px;   /* list items, notices, media thumbs */
+  --r-lg: 24px;   /* cards, panels, tab bars */
+  --r-xl: 30px;   /* dialog, footer, hero panels */
+  --r-pill: 999px;
+
+  /* Layered shadows give the "stacked layers" depth. */
+  --sh-1: 0 1px 2px rgba(5, 71, 52, 0.06), 0 3px 8px rgba(5, 71, 52, 0.07);
+  --sh-2: 0 2px 6px rgba(5, 71, 52, 0.06), 0 14px 30px rgba(5, 71, 52, 0.11);
+  --sh-3: 0 6px 16px rgba(5, 71, 52, 0.10), 0 28px 62px rgba(5, 71, 52, 0.17);
+  --shadow: var(--sh-2);
+}
+
+/* --- Controls: buttons, links, inputs --- */
+.button,
+.primary-link,
+.order-button {
+  border-radius: var(--r-sm);
+}
+
+.category-nav button,
+.hero-proof span,
+.chip {
+  border-radius: var(--r-pill);
+}
+
+.icon-button,
+.slider-dots button {
+  border-radius: var(--r-pill);
+}
+
+.category-nav button:hover,
+.button:hover,
+.primary-link:hover,
+.icon-button:hover {
+  box-shadow: var(--sh-2);
+}
+
+input,
+select,
+textarea,
+.input-suffix,
+.choice-group label,
+.hero-proof span {
+  border-radius: var(--r-sm);
+}
+
+.search-wrap {
+  border-radius: var(--r-pill);
+  padding: 0 18px;
+}
+
+.search-suggestions {
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-3);
+}
+
+.suggestion-item {
+  border-radius: var(--r-sm);
+}
+
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+/* --- Brand mark & header --- */
+.brand-mark {
+  border-radius: var(--r-md);
+}
+
+.site-header {
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  box-shadow: var(--sh-2);
+}
+
+/* --- Cards & panels: consistent rounding + layered shadow --- */
+.product-card,
+.article-card,
+.media-item,
+.finder-panel,
+.admin-login,
+.admin-panel,
+.admin-card,
+.admin-tabs,
+.article-detail-copy,
+.article-content,
+.feature-slider {
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-2);
+}
+
+.product-card:hover,
+.article-card:hover {
+  box-shadow: var(--sh-3);
+}
+
+.article-detail-image {
+  border-radius: var(--r-lg);
+}
+
+/* --- Promise strip: three floating rounded cards instead of a seam grid --- */
+.promise-strip {
+  gap: 14px;
+  padding: 24px clamp(16px, 5vw, 72px);
+  background: transparent;
+  border-bottom: 0;
+}
+
+.promise-strip div {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-1);
+}
+
+/* --- Smaller surfaces --- */
+.admin-item,
+.notice,
+.pickup-contact,
+.finder-result,
+.media-thumb,
+.empty-state,
+.choice-group label {
+  border-radius: var(--r-md);
+}
+
+.admin-item {
+  box-shadow: var(--sh-1);
+}
+
+.admin-item img,
+.media-thumb img,
+.order-summary img {
+  border-radius: var(--r-sm);
+}
+
+.fitment-chip {
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+
+/* --- Dialog: floating rounded sheet --- */
+.order-dialog {
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-3);
+  overflow: hidden;
+}
+
+/* --- Footer: rounded top like a raised sheet --- */
+.site-footer {
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: var(--sh-2);
+}
+
+/* --- Mobile polish: slightly tighter radii so small cards don't look bulky --- */
+@media (max-width: 640px) {
+  :root {
+    --r-lg: 20px;
+    --r-xl: 24px;
+  }
+
+  .site-header {
+    border-radius: 0;
+  }
+
+  .promise-strip {
+    padding: 16px 14px;
+  }
+}

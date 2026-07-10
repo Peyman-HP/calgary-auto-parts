@@ -1366,22 +1366,20 @@ init().catch((error) => {
     </div>`;
 });
 
-// Scroll-scrubbed cinematic video backdrop.
-// Video A plays through the first half of the page, crossfades into video B
-// for the second half; scrolling back rewinds. Desktop only, respects
-// prefers-reduced-motion, and loads after everything else so it never slows
-// down the storefront.
+// Scroll-scrubbed cinematic video backdrop: the video timeline is tied to the
+// scroll position, so scrolling down plays it forward and scrolling up rewinds.
+// Respects prefers-reduced-motion and loads after everything else so it never
+// slows down the storefront.
 function initVideoBackdrop() {
   const backdrop = document.querySelector("#videoBackdrop");
   if (!backdrop) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  const videoA = document.querySelector("#bgVideoA");
-  const videoB = document.querySelector("#bgVideoB");
+  const video = document.querySelector("#bgVideoA");
   const overlay = document.querySelector("#videoBackdropOverlay");
   const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
-  // Most phones use lighter encodes, but high-density devices on a decent
+  // Most phones use the lighter encode, but high-density devices on a decent
   // connection get the sharper source because the backdrop is first-viewport.
   const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
   const canUseSharperMobileVideo = isMobile
@@ -1389,22 +1387,16 @@ function initVideoBackdrop() {
     && !connection?.saveData
     && !["slow-2g", "2g"].includes(connection?.effectiveType || "");
   if (isMobile && !canUseSharperMobileVideo) {
-    videoA.src = "/assets/bg-cars-mobile.mp4";
-    videoB.src = "/assets/bg-energy-mobile.mp4";
+    video.src = "/assets/bg-cars-mobile.mp4";
   }
 
-  [videoA, videoB].forEach((video) => {
-    video.preload = "auto";
-    video.load();
-  });
+  video.preload = "auto";
+  video.load();
 
   backdrop.hidden = false;
   document.body.classList.add("has-video-bg");
 
-  const SPLIT = isMobile ? 0.42 : 0.5;
-  const FADE = isMobile ? 0.14 : 0.08;
-
-  const scrub = (video, progress) => {
+  const scrub = (progress) => {
     if (video.readyState < 1 || !Number.isFinite(video.duration)) return;
     const target = Math.max(0, Math.min(video.duration - 0.05, progress * video.duration));
     if (Math.abs(video.currentTime - target) > 0.02) {
@@ -1419,16 +1411,7 @@ function initVideoBackdrop() {
       ? mobileScrubDistance
       : document.documentElement.scrollHeight - window.innerHeight;
     const p = maxScroll > 0 ? Math.max(0, Math.min(1, window.scrollY / maxScroll)) : 0;
-
-    const progressA = Math.min(1, p / (SPLIT + FADE));
-    const progressB = Math.max(0, Math.min(1, (p - (SPLIT - FADE)) / (1 - SPLIT + FADE)));
-    const fade = Math.max(0, Math.min(1, (p - (SPLIT - FADE)) / (2 * FADE)));
-
-    videoA.style.opacity = String(1 - fade);
-    videoB.style.opacity = String(fade);
-    if (fade < 1) scrub(videoA, progressA);
-    if (fade > 0) scrub(videoB, progressB);
-
+    scrub(p);
     // Keep the hero vivid at the top, wash the video into the page as you scroll.
     overlay.style.opacity = String(Math.min(0.94, (isMobile ? 0.14 : 0.2) + p * (isMobile ? 1.8 : 1.5)));
   };
@@ -1447,8 +1430,7 @@ function initVideoBackdrop() {
     }
     requestAnimationFrame(watch);
   };
-  videoA.addEventListener("loadedmetadata", () => { lastY = -1; });
-  videoB.addEventListener("loadedmetadata", () => { lastY = -1; });
+  video.addEventListener("loadedmetadata", () => { lastY = -1; });
   update();
   requestAnimationFrame(watch);
 }
