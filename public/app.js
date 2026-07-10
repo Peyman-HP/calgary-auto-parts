@@ -1,4 +1,5 @@
 const PAGE_SIZE = 12;
+const CUSTOM_MAKE_VALUE = "__custom_make__";
 const CUSTOM_FITMENT_VALUE = "__custom__";
 
 const state = {
@@ -13,6 +14,7 @@ const state = {
     category: "",
     type: "",
     make: "",
+    customVehicleMake: "",
     fitmentId: "",
     customVehicleModel: "",
     groupTokens: [],
@@ -162,7 +164,7 @@ function productMatchesSearch(product, query) {
 }
 
 function filteredProducts() {
-  if (state.filters.fitmentId === CUSTOM_FITMENT_VALUE || state.filters.customVehicleModel) return [];
+  if (state.filters.customVehicleMake || state.filters.fitmentId === CUSTOM_FITMENT_VALUE || state.filters.customVehicleModel) return [];
   return state.products
     .filter((product) => !state.filters.category || product.category === state.filters.category)
     .filter((product) => !state.filters.type || product.type === state.filters.type)
@@ -326,7 +328,13 @@ function fitmentMakes() {
 
 function renderFilterOptions() {
   fillSelect(els.typeFilter, "All products", state.taxonomy.types, state.filters.type);
-  fillSelect(els.makeFilter, "Select make", fitmentMakes(), state.filters.make);
+  const selectedMake = state.filters.customVehicleMake ? CUSTOM_MAKE_VALUE : state.filters.make;
+  els.makeFilter.innerHTML = [
+    optionHtml("", "Select make", selectedMake),
+    ...fitmentMakes().map((make) => optionHtml(make, make, selectedMake)),
+    optionHtml(CUSTOM_MAKE_VALUE, "Other / enter manually", selectedMake)
+  ].join("");
+  syncCustomMakeInput();
   fillModelOptions();
 }
 
@@ -363,15 +371,30 @@ function applyFitmentSelection(fitmentId) {
   renderFinderResult();
 }
 
+function vehicleMakeValue() {
+  return state.filters.customVehicleMake || state.filters.make || "";
+}
+
 function customVehicleLabel() {
-  return [state.filters.make, state.filters.customVehicleModel].filter(Boolean).join(" ").trim();
+  return [vehicleMakeValue(), state.filters.customVehicleModel].filter(Boolean).join(" ").trim();
+}
+
+function syncCustomMakeInput() {
+  const wrap = document.querySelector("#customMakeWrap");
+  const input = document.querySelector("#customMakeInput");
+  if (!wrap || !input) return;
+  const visible = els.makeFilter.value === CUSTOM_MAKE_VALUE;
+  wrap.hidden = !visible;
+  input.disabled = !visible;
+  input.value = state.filters.customVehicleMake || "";
+  input.required = visible;
 }
 
 function syncCustomModelInput() {
   const wrap = document.querySelector("#customModelWrap");
   const input = document.querySelector("#customModelInput");
   if (!wrap || !input) return;
-  const visible = Boolean(state.filters.make && els.modelFilter.value === CUSTOM_FITMENT_VALUE);
+  const visible = Boolean(state.filters.customVehicleMake || (state.filters.make && els.modelFilter.value === CUSTOM_FITMENT_VALUE));
   wrap.hidden = !visible;
   input.disabled = !visible;
   input.value = state.filters.customVehicleModel || "";
@@ -381,10 +404,10 @@ function syncCustomModelInput() {
 function renderFinderResult() {
   if (!els.finderResult) return;
   const f = state.selectedFitment;
-  if (!f && state.filters.customVehicleModel) {
+  if (!f && (state.filters.customVehicleMake || state.filters.customVehicleModel)) {
     els.finderResult.hidden = false;
     els.finderResult.innerHTML = `
-      <strong>${escapeHtml(customVehicleLabel())}</strong>
+      <strong>${escapeHtml(customVehicleLabel() || "Custom vehicle")}</strong>
       <span>We will confirm the correct battery group and availability by phone.</span>
       <span class="muted">Submit a request and the exact vehicle details will be sent to the owner.</span>
     `;
@@ -412,7 +435,7 @@ function renderActiveFilters(products) {
   if (state.filters.type) filters.push(state.filters.type);
   if (state.selectedFitment) {
     filters.push(`${state.selectedFitment.make} ${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim());
-  } else if (state.filters.customVehicleModel) {
+  } else if (state.filters.customVehicleMake || state.filters.customVehicleModel) {
     filters.push(customVehicleLabel());
   }
   if (state.filters.search) filters.push(`Search: "${state.filters.search}"`);
@@ -745,7 +768,7 @@ function openOrderDialog(product) {
       fulfillment: formData.get("fulfillment"),
       deliveryRequested: formData.get("fulfillment") !== "pickup",
       pickupTime: formData.get("pickupTime"),
-      vehicleMake: state.selectedFitment?.make || state.filters.make || "",
+      vehicleMake: state.selectedFitment?.make || vehicleMakeValue(),
       vehicleModel: state.selectedFitment ? `${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim() : state.filters.customVehicleModel || "",
       name: formData.get("name"),
       phone: formData.get("phone"),
@@ -774,9 +797,12 @@ function openOrderDialog(product) {
 
 function openCustomRequestDialog() {
   const makes = fitmentMakes();
-  const selectedMake = state.selectedFitment?.make || state.filters.make || "";
+  const selectedMake = state.selectedFitment?.make || vehicleMakeValue();
   const selectedModel = state.selectedFitment ? `${state.selectedFitment.model} ${state.selectedFitment.yearRange}`.trim() : state.filters.customVehicleModel || "";
   const title = requestedProductTitle();
+  const makeOptions = makes.includes(selectedMake) || !selectedMake
+    ? [optionHtml("", "Select make", selectedMake), ...makes.map((make) => optionHtml(make, make, selectedMake))]
+    : [optionHtml("", "Select make", selectedMake), optionHtml(selectedMake, selectedMake, selectedMake), ...makes.map((make) => optionHtml(make, make, selectedMake))];
 
   els.orderDialogBody.innerHTML = `
     <div class="order-layout">
@@ -806,7 +832,7 @@ function openCustomRequestDialog() {
             <label>
               Vehicle make
               <select id="orderMake" name="vehicleMake">
-                ${[optionHtml("", "Select make", selectedMake), ...makes.map((make) => optionHtml(make, make, selectedMake))].join("")}
+                ${makeOptions.join("")}
               </select>
             </label>
             <label>
@@ -1152,10 +1178,16 @@ function bindEvents() {
   });
 
   els.makeFilter.addEventListener("change", () => {
-    state.filters.make = els.makeFilter.value;
+    const customMake = els.makeFilter.value === CUSTOM_MAKE_VALUE;
+    state.filters.make = customMake ? "" : els.makeFilter.value;
+    state.filters.customVehicleMake = customMake ? state.filters.customVehicleMake : "";
     state.filters.customVehicleModel = "";
-    applyFitmentSelection("");
+    state.filters.fitmentId = customMake ? CUSTOM_FITMENT_VALUE : "";
+    state.selectedFitment = null;
+    state.filters.groupTokens = [];
+    syncCustomMakeInput();
     fillModelOptions();
+    renderFinderResult();
     renderProducts();
   });
 
@@ -1165,6 +1197,20 @@ function bindEvents() {
   });
 
   const customModelInput = document.querySelector("#customModelInput");
+  const customMakeInput = document.querySelector("#customMakeInput");
+  if (customMakeInput) {
+    customMakeInput.addEventListener("input", () => {
+      state.filters.customVehicleMake = customMakeInput.value.trim();
+      state.filters.make = "";
+      state.filters.fitmentId = CUSTOM_FITMENT_VALUE;
+      state.selectedFitment = null;
+      state.filters.groupTokens = [];
+      syncCustomModelInput();
+      renderFinderResult();
+      renderProducts();
+    });
+  }
+
   if (customModelInput) {
     customModelInput.addEventListener("input", () => {
       state.filters.customVehicleModel = customModelInput.value.trim();
@@ -1183,7 +1229,7 @@ function bindEvents() {
   });
 
   els.clearFilters.addEventListener("click", () => {
-    state.filters = { category: "", type: "", make: "", fitmentId: "", customVehicleModel: "", groupTokens: [], search: "" };
+    state.filters = { category: "", type: "", make: "", customVehicleMake: "", fitmentId: "", customVehicleModel: "", groupTokens: [], search: "" };
     state.selectedFitment = null;
     els.searchInput.value = "";
     hideSearchSuggestions();
@@ -1250,9 +1296,16 @@ function initVideoBackdrop() {
   const videoA = document.querySelector("#bgVideoA");
   const videoB = document.querySelector("#bgVideoB");
   const overlay = document.querySelector("#videoBackdropOverlay");
+  const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
-  // Phones get lighter 640px encodes (~1.3MB total instead of ~4.3MB).
-  if (window.matchMedia("(max-width: 767px)").matches) {
+  // Most phones use lighter encodes, but high-density devices on a decent
+  // connection get the sharper source because the backdrop is first-viewport.
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const canUseSharperMobileVideo = isMobile
+    && window.devicePixelRatio >= 2
+    && !connection?.saveData
+    && !["slow-2g", "2g"].includes(connection?.effectiveType || "");
+  if (isMobile && !canUseSharperMobileVideo) {
     videoA.src = "/assets/bg-cars-mobile.mp4";
     videoB.src = "/assets/bg-energy-mobile.mp4";
   }
@@ -1265,8 +1318,8 @@ function initVideoBackdrop() {
   backdrop.hidden = false;
   document.body.classList.add("has-video-bg");
 
-  const SPLIT = 0.5;
-  const FADE = 0.08;
+  const SPLIT = isMobile ? 0.42 : 0.5;
+  const FADE = isMobile ? 0.14 : 0.08;
 
   const scrub = (video, progress) => {
     if (video.readyState < 1 || !Number.isFinite(video.duration)) return;
@@ -1277,7 +1330,11 @@ function initVideoBackdrop() {
   };
 
   const update = () => {
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    const hero = document.querySelector(".hero");
+    const mobileScrubDistance = Math.max(window.innerHeight * 0.72, (hero?.offsetHeight || window.innerHeight) * 0.82);
+    const maxScroll = isMobile
+      ? mobileScrubDistance
+      : document.documentElement.scrollHeight - window.innerHeight;
     const p = maxScroll > 0 ? Math.max(0, Math.min(1, window.scrollY / maxScroll)) : 0;
 
     const progressA = Math.min(1, p / (SPLIT + FADE));
@@ -1290,7 +1347,7 @@ function initVideoBackdrop() {
     if (fade > 0) scrub(videoB, progressB);
 
     // Keep the hero vivid at the top, wash the video into the page as you scroll.
-    overlay.style.opacity = String(Math.min(0.94, 0.2 + p * 1.5));
+    overlay.style.opacity = String(Math.min(0.94, (isMobile ? 0.14 : 0.2) + p * (isMobile ? 1.8 : 1.5)));
   };
 
   // rAF watcher instead of scroll events: works identically across desktop,

@@ -43,7 +43,7 @@ async function ensureRuntimeDirs() {
 }
 
 const DB_SAMPLE_PATH = path.join(DATA_DIR, "db.sample.json");
-const FITMENT_DEFAULTS_MIGRATION = "fitmentGuideDefaults20260710";
+const FITMENT_DEFAULTS_MIGRATION = "fitmentGuideDefaults20260710b";
 
 function mergeDefaultFitments(db, sampleDb) {
   if (db.migrations?.[FITMENT_DEFAULTS_MIGRATION]) return false;
