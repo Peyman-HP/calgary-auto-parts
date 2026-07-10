@@ -1063,15 +1063,38 @@ let sliderIndex = 0;
 let sliderTimer = null;
 
 function sliderSlides() {
-  const slides = [];
+  const productSlides = [];
+  const articleSlides = [];
   const productId = state.settings?.slider?.productId;
   const articleId = state.settings?.slider?.articleId;
   const product = productId ? state.products.find((entry) => entry.id === productId) : null;
   const article = articleId ? state.articles.find((entry) => entry.id === articleId) : null;
 
-  if (product) slides.push({ kind: "product", item: product });
-  if (article) slides.push({ kind: "article", item: article });
-  return slides;
+  if (product) productSlides.push({ kind: "product", item: product });
+  sortedProductsForSlider()
+    .filter((entry) => entry.id !== product?.id)
+    .slice(0, 2 - productSlides.length)
+    .forEach((entry) => productSlides.push({ kind: "product", item: entry }));
+
+  if (article) articleSlides.push({ kind: "article", item: article });
+  sortedArticles()
+    .filter((entry) => entry.id !== article?.id)
+    .slice(0, 2 - articleSlides.length)
+    .forEach((entry) => articleSlides.push({ kind: "article", item: entry }));
+
+  return [...productSlides.slice(0, 2), ...articleSlides.slice(0, 2)];
+}
+
+function sortedProductsForSlider() {
+  return state.products
+    .slice()
+    .sort((a, b) => {
+      const featuredSort = (b.featured === true) - (a.featured === true);
+      if (featuredSort) return featuredSort;
+      const dateSort = new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      if (dateSort) return dateSort;
+      return productTitle(a).localeCompare(productTitle(b));
+    });
 }
 
 function showSlide(index) {
@@ -1090,6 +1113,44 @@ function startSliderTimer(count) {
   if (count > 1) {
     sliderTimer = setInterval(() => showSlide(sliderIndex + 1), 6000);
   }
+}
+
+function bindSliderNavigation(slider, track, slides) {
+  const prev = document.querySelector("#sliderPrev");
+  const next = document.querySelector("#sliderNext");
+  const go = (offset) => {
+    showSlide(sliderIndex + offset);
+    startSliderTimer(slides.length);
+  };
+
+  if (prev) prev.onclick = () => go(-1);
+  if (next) next.onclick = () => go(1);
+
+  let startX = 0;
+  let startY = 0;
+  let swiping = false;
+
+  track.onpointerdown = (event) => {
+    startX = event.clientX;
+    startY = event.clientY;
+    swiping = true;
+  };
+
+  track.onpointerup = (event) => {
+    if (!swiping) return;
+    swiping = false;
+    const deltaX = event.clientX - startX;
+    const deltaY = event.clientY - startY;
+    if (Math.abs(deltaX) > 48 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+      go(deltaX < 0 ? 1 : -1);
+    }
+  };
+
+  track.onpointercancel = () => {
+    swiping = false;
+  };
+
+  slider.classList.toggle("single-slide", slides.length < 2);
 }
 
 function renderSlider() {
@@ -1115,7 +1176,7 @@ function renderSlider() {
               <span class="summary-label">Featured product</span>
               <h3>${escapeHtml(productTitle(product))}</h3>
               ${ratingStarsHtml(product.rating)}
-              <p>${escapeHtml(product.description)}</p>
+              <p>${escapeHtml(compactDescription(product.description, 180))}</p>
               <div class="feature-slide-actions">
                 <strong>${money(product.price)}</strong>
                 <button class="button dark" type="button" data-slide-order>Order now</button>
@@ -1132,7 +1193,7 @@ function renderSlider() {
           <div class="feature-slide-body">
             <span class="summary-label">Featured guide</span>
             <h3>${escapeHtml(article.title)}</h3>
-            <p>${escapeHtml(article.summary)}</p>
+            <p>${escapeHtml(compactDescription(article.summary, 180))}</p>
             <div class="feature-slide-actions">
               <a class="button dark" href="/article.html?slug=${encodeURIComponent(article.slug)}">Read article</a>
             </div>
@@ -1153,13 +1214,14 @@ function renderSlider() {
     });
   });
 
-  const orderButton = track.querySelector("[data-slide-order]");
-  if (orderButton) {
-    const product = state.products.find((entry) => entry.id === track.querySelector("[data-kind='product']").dataset.id);
-    orderButton.addEventListener("click", () => openOrderDialog(product));
-  }
+  track.querySelectorAll("[data-slide-order]").forEach((button) => {
+    const slide = button.closest("[data-kind='product']");
+    const product = state.products.find((entry) => entry.id === slide?.dataset.id);
+    if (product) button.addEventListener("click", () => openOrderDialog(product));
+  });
 
   slider.hidden = false;
+  bindSliderNavigation(slider, track, slides);
   showSlide(0);
   startSliderTimer(slides.length);
 }
