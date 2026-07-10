@@ -283,6 +283,8 @@ const MESSAGES = {
     productUnavailable: "Selected product is no longer available.",
     phoneAddressRequired: "Phone and service address are required.",
     phonePickupTimeRequired: "Phone and pickup time are required.",
+    invalidPhone: "Please enter a valid phone number (at least 7 digits).",
+    invalidEmail: "Please enter a valid email address.",
     tooManyOrders: "Too many orders from this connection. Please wait a few minutes and try again.",
     orderNotFound: "Order not found.",
     invalidStatus: "Invalid order status.",
@@ -295,6 +297,8 @@ const MESSAGES = {
     productUnavailable: "محصول انتخاب‌شده دیگر در دسترس نیست.",
     phoneAddressRequired: "شماره تلفن و آدرس سرویس اجباری هستند.",
     phonePickupTimeRequired: "شماره تلفن و زمان تحویل حضوری اجباری هستند.",
+    invalidPhone: "لطفاً یک شماره تلفن معتبر وارد کنید (حداقل ۷ رقم).",
+    invalidEmail: "لطفاً یک ایمیل معتبر وارد کنید.",
     tooManyOrders: "تعداد سفارش‌های ارسالی از این اتصال زیاد است. لطفاً چند دقیقه صبر کنید.",
     orderNotFound: "سفارش پیدا نشد.",
     invalidStatus: "وضعیت سفارش معتبر نیست.",
@@ -1354,8 +1358,17 @@ app.post("/api/orders", async (req, res, next) => {
     const pickupTime = String(body.pickupTime || "").trim();
     const phone = String(body.phone || "").trim();
     const address = String(body.address || "").trim();
+    const email = String(body.email || "").trim();
     if (!phone || (!address && fulfillment !== "pickup")) {
       res.status(400).json({ error: message(req, "phoneAddressRequired") });
+      return;
+    }
+    if ((phone.match(/\d/g) || []).length < 7) {
+      res.status(400).json({ error: message(req, "invalidPhone") });
+      return;
+    }
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      res.status(400).json({ error: message(req, "invalidEmail") });
       return;
     }
     if (fulfillment === "pickup" && !pickupTime) {

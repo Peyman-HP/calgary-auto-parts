@@ -71,6 +71,20 @@ function optionHtml(value, label, selectedValue) {
   return `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(label)}</option>`;
 }
 
+// Reliable contact validation (works regardless of native pattern support).
+// Returns an error message string, or "" when valid.
+function contactError(formData) {
+  const phone = String(formData.get("phone") || "").trim();
+  const email = String(formData.get("email") || "").trim();
+  if ((phone.match(/\d/g) || []).length < 7) {
+    return "Please enter a valid phone number (at least 7 digits).";
+  }
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return "Please enter a valid email address.";
+  }
+  return "";
+}
+
 function fillSelect(select, placeholder, options, selectedValue = "") {
   select.innerHTML = [
     optionHtml("", placeholder, selectedValue),
@@ -718,7 +732,7 @@ function openOrderDialog(product) {
             </label>
             <label>
               Phone
-              <input name="phone" autocomplete="tel" placeholder="(403) 555-0123" required>
+              <input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(403) 555-0123" pattern="[0-9 ()+.-]{7,20}" title="Enter a valid phone number (at least 7 digits)." required>
             </label>
             <label class="full">
               Service address
@@ -726,7 +740,7 @@ function openOrderDialog(product) {
             </label>
             <label class="full">
               Email
-              <input name="email" type="email" autocomplete="email" placeholder="Optional">
+              <input name="email" type="email" autocomplete="email" placeholder="Optional" pattern="[^@\\s]+@[^@\\s]+\\.[^@\\s]+" title="Enter a valid email address, e.g. name@example.com.">
             </label>
             <label class="full">
               Notes
@@ -774,9 +788,15 @@ function openOrderDialog(product) {
 
   orderForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    orderStatus.textContent = "Sending order...";
 
     const formData = new FormData(orderForm);
+    const invalid = contactError(formData);
+    if (invalid) {
+      orderStatus.textContent = invalid;
+      return;
+    }
+    orderStatus.textContent = "Sending order...";
+
     const payload = {
       productId: product.id,
       quantity: Number(formData.get("quantity") || 1),
@@ -873,7 +893,7 @@ function openCustomRequestDialog() {
             </label>
             <label>
               Phone
-              <input name="phone" autocomplete="tel" placeholder="(403) 555-0123" required>
+              <input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(403) 555-0123" pattern="[0-9 ()+.-]{7,20}" title="Enter a valid phone number (at least 7 digits)." required>
             </label>
             <label class="full">
               Service address
@@ -881,7 +901,7 @@ function openCustomRequestDialog() {
             </label>
             <label class="full">
               Email
-              <input name="email" type="email" autocomplete="email" placeholder="Optional">
+              <input name="email" type="email" autocomplete="email" placeholder="Optional" pattern="[^@\\s]+@[^@\\s]+\\.[^@\\s]+" title="Enter a valid email address, e.g. name@example.com.">
             </label>
             <label class="full">
               Notes
@@ -915,8 +935,13 @@ function openCustomRequestDialog() {
 
   orderForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    orderStatus.textContent = "Sending request...";
     const formData = new FormData(orderForm);
+    const invalid = contactError(formData);
+    if (invalid) {
+      orderStatus.textContent = invalid;
+      return;
+    }
+    orderStatus.textContent = "Sending request...";
     const payload = {
       customTitle: title,
       customType: formData.get("customType"),

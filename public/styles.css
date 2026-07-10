@@ -1893,9 +1893,22 @@ textarea,
   border-radius: var(--r-md);
 }
 
+/* Floating rounded header — detached card, rounded on all four corners. */
 .site-header {
-  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  top: 12px;
+  margin: 12px clamp(10px, 3vw, 22px) 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   box-shadow: var(--sh-2);
+}
+
+/* Rounded urgent-call box + its phone button */
+.hero-urgent {
+  border-radius: var(--r-lg);
+}
+
+.hero-urgent a {
+  border-radius: var(--r-pill);
 }
 
 /* --- Cards & panels: consistent rounding + layered shadow --- */
@@ -1970,9 +1983,11 @@ textarea,
   overflow: hidden;
 }
 
-/* --- Footer: rounded top like a raised sheet --- */
+/* --- Footer: floating rounded card, all four corners --- */
 .site-footer {
-  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  margin: 8px clamp(10px, 3vw, 22px) 16px;
+  border: 0;
+  border-radius: var(--r-lg);
   box-shadow: var(--sh-2);
 }
 
@@ -1984,7 +1999,12 @@ textarea,
   }
 
   .site-header {
-    border-radius: 0;
+    top: 8px;
+    margin: 8px 8px 0;
+  }
+
+  .site-footer {
+    margin: 8px 8px 12px;
   }
 
   .promise-strip {
