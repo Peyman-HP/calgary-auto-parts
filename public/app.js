@@ -1425,6 +1425,23 @@ function initVideoBackdrop() {
   backdrop.hidden = false;
   document.body.classList.add("has-video-bg");
 
+  const header = document.querySelector(".site-header");
+  const syncHeaderShade = () => {
+    if (!header) return;
+    const headerStyle = window.getComputedStyle(header);
+    const relativeShift = headerStyle.position === "relative"
+      ? Number.parseFloat(headerStyle.top) || 0
+      : 0;
+    const headerBottom = header.offsetTop + header.offsetHeight + relativeShift;
+    document.body.style.setProperty("--header-shade-height", `${headerBottom}px`);
+  };
+  syncHeaderShade();
+  if ("ResizeObserver" in window && header) {
+    new ResizeObserver(syncHeaderShade).observe(header);
+  } else {
+    window.addEventListener("resize", syncHeaderShade, { passive: true });
+  }
+
   const scrub = (progress) => {
     if (video.readyState < 1 || !Number.isFinite(video.duration)) return;
     const target = Math.max(0, Math.min(video.duration - 0.05, progress * video.duration));
