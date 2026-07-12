@@ -1438,6 +1438,9 @@ function initVideoBackdrop() {
     const heroScrubDistance = Math.max(window.innerHeight * 0.72, (hero?.offsetHeight || window.innerHeight) * 0.82);
     const maxScroll = heroScrubDistance;
     const p = maxScroll > 0 ? Math.max(0, Math.min(1, window.scrollY / maxScroll)) : 0;
+    // Once the hero sequence is complete, keep the rest of the page on its
+    // normal surface so the video cannot tint gaps around the footer.
+    backdrop.style.visibility = p >= 0.999 ? "hidden" : "visible";
     video.style.opacity = "1";
     scrub(p);
     // Keep the hero vivid at the top, wash the video into the page as you scroll.
