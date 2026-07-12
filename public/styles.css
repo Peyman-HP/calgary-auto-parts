@@ -589,7 +589,7 @@ input[type="checkbox"] {
 }
 
 .articles-section {
-  background: rgba(255, 255, 255, 0.54);
+  background: transparent;
   border-top: 1px solid var(--line);
 }
 
