@@ -265,9 +265,11 @@ a {
 }
 
 .video-backdrop {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
+  height: min(100vh, 760px);
+  overflow: hidden;
   background: var(--green-dark);
 }
 
@@ -290,11 +292,19 @@ a {
 }
 
 body.has-video-bg {
-  background: transparent;
+  background:
+    radial-gradient(circle at top left, rgba(19, 160, 113, 0.18), transparent 34rem),
+    linear-gradient(180deg, #f8fcfa 0%, #eef7f2 100%);
 }
 
 body.has-video-bg .hero {
   background: transparent;
+}
+
+body.has-video-bg main,
+body.has-video-bg .site-footer {
+  position: relative;
+  z-index: 1;
 }
 
 body.has-video-bg.video-ready .hero-image {

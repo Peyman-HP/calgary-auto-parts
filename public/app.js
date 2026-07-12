@@ -1435,10 +1435,8 @@ function initVideoBackdrop() {
 
   const update = () => {
     const hero = document.querySelector(".hero");
-    const mobileScrubDistance = Math.max(window.innerHeight * 0.72, (hero?.offsetHeight || window.innerHeight) * 0.82);
-    const maxScroll = isMobile
-      ? mobileScrubDistance
-      : document.documentElement.scrollHeight - window.innerHeight;
+    const heroScrubDistance = Math.max(window.innerHeight * 0.72, (hero?.offsetHeight || window.innerHeight) * 0.82);
+    const maxScroll = heroScrubDistance;
     const p = maxScroll > 0 ? Math.max(0, Math.min(1, window.scrollY / maxScroll)) : 0;
     video.style.opacity = "1";
     scrub(p);
